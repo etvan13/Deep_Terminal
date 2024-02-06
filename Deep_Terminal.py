@@ -238,22 +238,18 @@ class GearDemo:
             print("Invalid input. Please enter a valid number.")
 
     def update_gear_ratios(self, direction):
-        # Calculate the base increment value 'n' as the product of direction and rps
-        n = direction * self.rps
+        # Base increment value for the first gear, as a fraction of a full rotation
+        base_increment = direction * self.rps / 60
 
-        # Update each gear based on the formula: gear_value = n / 60^(i+1), where i is the gear index
         for i in range(len(self.gear_ratios)):
-            self.gear_ratios[i] += n / (60 ** (i + 1))
+            # Update the gear ratio by the base increment, adjusted by the gear's position (1/60th power)
+            self.gear_ratios[i] += base_increment / (60 ** i)
 
-            # Check if the gear ratio reaches or exceeds 1
+            # Ensure the gear ratio wraps around at 1 in a circular manner
             if self.gear_ratios[i] >= 1:
-                self.gear_ratios[i] -= 1  # Reset this gear to 0 by subtracting 1
-
-                # Optionally increment the next gear by 1/60th of a full rotation
-                # Only if you want the cascading effect where a full rotation of one gear
-                # partially increments the next gear
-                if i + 1 < len(self.gear_ratios):
-                    self.gear_ratios[i + 1] += 1 / (60 ** (i + 2))
+                self.gear_ratios[i] -= int(self.gear_ratios[i])  # Keep the fractional part only
+            elif self.gear_ratios[i] < 0:
+                self.gear_ratios[i] = 1 - (-self.gear_ratios[i] % 1)  # Wrap around to just below 1
 
     def update_counter_values(self, direction):
         # Accumulate increments in a floating-point variable
@@ -439,7 +435,7 @@ class Read:
                 message += "No viewable messages."
                 return message
 
-            print("List of available messages!\n")
+            print("List of available messages:\n")
             for msg_id, title in messages:
                 print(f"{title}")
 
