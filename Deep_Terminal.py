@@ -49,8 +49,6 @@ class Terminal:
             command = command_input.lower()
             output = self.process_command(command)
             print(output)
-            if command == "exit":
-                break
     
     ##UNUSED##
     def add_external_command(self, command_name, command_function):
@@ -66,6 +64,22 @@ class Terminal:
     def gearDemo_command(self):
         gear_demo_obj = GearDemo(self)
         gear_demo_obj.run()
+
+        # Check if there are any messages in the queue
+        if gear_demo_obj.message_queue:
+            # Display a general message about the queued messages
+            num_messages = len(gear_demo_obj.message_queue)
+            print('\\newpage')
+            print(f'{num_messages} new message(s) during traversal period.')
+            print("If there are too many, just hold 'enter' to fast forward through them.")
+            print("It's highly encouraged to read them though!\n")
+            input('Press enter to start reading the messages > ')
+
+            # Display queued messages in the order they were added (oldest first)
+            for message in gear_demo_obj.message_queue:
+                print('\\newpage\n' + message)
+                input('Input any key to continue > ')  # Wait for user input before continuing
+
         return "Back to main terminal."
 
     def forwards(self):
@@ -115,8 +129,8 @@ class Counter:
         for i in range(len(self.counters)):
             self.counters[i] += delta
             # Check for roll-over or roll-under
-            if delta > 0 and self.counters[i] == 60:
-                self.counters[i] = 0
+            if delta > 0 and self.counters[i] >= 60:
+                self.counters[i] %= 60
                 if i == len(self.counters) - 1:
                     self.universes += 1  # Increment universes if the last counter rolls over
                 continue
@@ -208,11 +222,22 @@ class Counter:
 class GearDemo:
     def __init__(self, terminal):
         self.terminal = terminal
-        self.counter_values = terminal.counter.get_counters_list().copy()
+        self.message_queue = [] # Empty list holding messages passed
+        self.displayed_message_ids = set()  # Set to keep track of displayed message titles
+
         # Initialize gear_ratios with a copy to avoid modifying the original counter
-        self.gear_ratios = [value / (60 ** (i + 1)) for i, value in enumerate(self.counter_values)]
+        total_gear_value = self.terminal.counter.baseTenConv()
+        self.gear_ratios = []
+        for i in range(len(self.terminal.counter.counters)):
+            # Calculate the gear's share of the total_gear_value
+            gear_value = (total_gear_value / (60 ** i)) % 60
+            # Convert the gear value to a ratio of a full rotation
+            gear_ratio = gear_value / 60
+            self.gear_ratios.append(gear_ratio)
+
         self.rps = 1  # Default RPS value
         self.accumulated_increment = 0
+
 
     def show_help(self):
         help_message = "Available commands:\n- Up arrow: Increase gears\n- Down arrow: Decrease gears\n- 'q': Quit"
@@ -251,33 +276,32 @@ class GearDemo:
             elif self.gear_ratios[i] < 0:
                 self.gear_ratios[i] = 1 - (-self.gear_ratios[i] % 1)  # Wrap around to just below 1
 
+        #self.terminal.counter.spec_change(self.accumulated_increment)
+
     def update_counter_values(self, direction):
         # Accumulate increments in a floating-point variable
         self.accumulated_increment += direction * self.rps
-        
-        # Update the first gear based on the integer part of the accumulated increment
+
+        # Calculate the whole number part of the accumulated increment
         increment = int(self.accumulated_increment)
-        self.accumulated_increment -= increment  # Remove the integer part from the accumulator
-        
-        # Apply the increment/decrement starting from the first counter
-        for i in range(len(self.counter_values)):
-            self.counter_values[i] += increment
 
-            # Check for roll-over
-            if self.counter_values[i] >= 60:
-                self.counter_values[i] -= 60
-                increment = 1  # Carry over to the next gear
-            # Check for roll-under
-            elif self.counter_values[i] < 0:
-                self.counter_values[i] += 60
-                increment = -1  # Borrow from the next gear
-            else:
-                # If there is no roll-over or roll-under, stop the cascade
-                increment = 0
+        if increment != 0:
+            # Pass the whole number increment to the terminal counter
+            self.terminal.counter.spec_change(increment)
 
-            # If we've adjusted the current counter without needing to carry/borrow, break the loop
-            if increment == 0:
-                break
+            # Call queue_messages to queue messages based on the updated counter value
+            self.queue_messages()
+
+            # Subtract the whole number part from the accumulated increment
+            self.accumulated_increment -= increment
+
+    def queue_messages(self):
+        coord = self.terminal.counter.get_counters_list()
+        messages_with_ids = Read.get_messages_for_coord(coord)  # Now includes IDs
+        for msg_id, formatted_message in messages_with_ids:
+            if msg_id not in self.displayed_message_ids:  # Check if the ID is not in the set
+                self.message_queue.append(formatted_message)
+                self.displayed_message_ids.add(msg_id)  # Add the ID to the set
 
     def display_info(self, screen):
         # Display gear ratios
@@ -286,8 +310,7 @@ class GearDemo:
         screen.addstr(0, 0, f"Gear Ratios: {formatted_ratios}\n")
 
         # Display counter-like values as whole numbers
-        formatted_counter_values = ' '.join(str(int(value)).zfill(2) for value in self.counter_values)
-        screen.addstr(1, 0, f"Counters: {formatted_counter_values}\n")
+        screen.addstr(1, 0, f"Counters: {self.terminal.counter.get_counters()}\n")
 
         screen.refresh()
 
@@ -461,25 +484,26 @@ class Read:
 
     @staticmethod
     def check_and_display_messages(coord):
-        messages = Read.get_messages_for_coord(coord)
-        if messages:
-            for message in messages:
-                print('\\newpage\n' + message)
-                input('Input any key to continue > ')  # Wait for user input before continuing
+        messages_with_ids = Read.get_messages_for_coord(coord)  # This now includes IDs
+        for _, formatted_message in messages_with_ids:  # Unpack the tuple, ignoring the ID
+            print('\\newpage\n' + formatted_message)
+            input('Input any key to continue > ')
 
     @staticmethod
     def get_messages_for_coord(display_coord):
         conn = sqlite3.connect('deep_messages.db')
         cur = conn.cursor()
-        cur.execute("SELECT input_coord, title, message FROM messages WHERE display_coord = ?", (' '.join(map(str, display_coord)),))
+        # Include ID in the SELECT statement
+        cur.execute("SELECT id, input_coord, title, message FROM messages WHERE display_coord = ?", (' '.join(map(str, display_coord)),))
         results = cur.fetchall()
         conn.close()
 
         messages = []
-        for input_coord, title, text in results:
+        for msg_id, input_coord, title, text in results:
             formatted_message = (f"Written at {input_coord}\n\n{title} :\n\n{text}\n\nAuto display at {' '.join(map(str, display_coord))}\n")
-            messages.append(formatted_message)
+            messages.append((msg_id, formatted_message))  # Include the ID with each message
         return messages
+
 
     def run(self):
         print(self.terminal.default_message())
