@@ -1,6 +1,7 @@
 import sqlite3
 import curses
 import time
+import pygame
 
 class Terminal:
     def __init__(self):
@@ -217,13 +218,14 @@ class Counter:
         # Calculate the distance and convert it to coordinate format
         distance_base_10 = next_coord - curr_cord
         return self.coord_conv(distance_base_10)
-
+    
 
 class GearDemo:
     def __init__(self, terminal):
         self.terminal = terminal
         self.message_queue = [] # Empty list holding messages passed
         self.displayed_message_ids = set()  # Set to keep track of displayed message titles
+        self.new_messages_count = 0
 
         # Initialize gear_ratios with a copy to avoid modifying the original counter
         total_gear_value = self.terminal.counter.baseTenConv()
@@ -238,18 +240,15 @@ class GearDemo:
         self.rps = 1  # Default RPS value
         self.accumulated_increment = 0
 
-
-    def show_help(self):
-        help_message = "Available commands:\n- Up arrow: Increase gears\n- Down arrow: Decrease gears\n- 'q': Quit"
-        return help_message
-
     def run(self):
-        # Set the RPS value
-        set_rps_response = self.set_rps()
-        print(set_rps_response)
-
-        # Start handling key presses
+        self.set_rps()  # Set the RPS value via CLI
+        pygame.display.init()
+        self.screen = pygame.display.set_mode((900, 600))  # Adjust size as needed
+        pygame.font.init() #Initialize font
+        self.font = pygame.font.Font('SourceCodePro-Regular.ttf', 15)
         self.start_gear_demo()
+        pygame.quit()  # Quit Pygame when done
+
     
     def set_rps(self):
         try:
@@ -297,45 +296,56 @@ class GearDemo:
 
     def queue_messages(self):
         coord = self.terminal.counter.get_counters_list()
-        messages_with_ids = Read.get_messages_for_coord(coord)  # Now includes IDs
+        messages_with_ids = Read.get_messages_for_coord(coord)  #includes IDs
+
         for msg_id, formatted_message in messages_with_ids:
             if msg_id not in self.displayed_message_ids:  # Check if the ID is not in the set
                 self.message_queue.append(formatted_message)
                 self.displayed_message_ids.add(msg_id)  # Add the ID to the set
+                self.new_messages_count += 1 #increments counter
 
-    def display_info(self, screen):
+    def display_info(self):
+        self.screen.fill((0, 0, 0))  # Clear the screen with a black background
+
         # Display gear ratios
-        gear_ratios = [f"{gear:.10f}" for gear in self.gear_ratios]
-        formatted_ratios = ' '.join(gear_ratios)
-        screen.addstr(0, 0, f"Gear Ratios: {formatted_ratios}\n")
+        gear_ratios_str = ' '.join([f"{gear:.10f}" for gear in self.gear_ratios])
+        ratios_surface = self.font.render(f"Gear Ratios: {gear_ratios_str}", True, (255, 255, 255))
+        self.screen.blit(ratios_surface, (10, 10))  # Adjust position as needed
 
-        # Display counter-like values as whole numbers
-        screen.addstr(1, 0, f"Counters: {self.terminal.counter.get_counters()}\n")
+        # Display counters
+        counters_str = self.terminal.counter.get_counters()
+        counters_surface = self.font.render(f"Counters: {counters_str}", True, (255, 255, 255))
+        self.screen.blit(counters_surface, (10, 40))  # Adjust position as needed
 
-        screen.refresh()
+        # Display new messages count if any
+        if self.new_messages_count > 0:
+            messages_surface = self.font.render(f"{self.new_messages_count} new message(s) available to read.", True, (255, 255, 255))
+            self.screen.blit(messages_surface, (10, 70))  # Adjust position as needed
 
+        pygame.display.flip()  # Update the screen
 
-    def handle_key_press(self, screen):
-        screen.nodelay(True)  # Non-blocking input
+    def handle_key_press(self):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
-        while True:
-            screen.clear()  # Clear the screen before updating
-            char = screen.getch()
-
-            if char == curses.KEY_UP:
+            keys = pygame.key.get_pressed()  # Get the state of all keyboard buttons
+            if keys[pygame.K_UP]:
                 self.update_gear_ratios(1)
                 self.update_counter_values(1)
-            elif char == curses.KEY_DOWN:
+            if keys[pygame.K_DOWN]:
                 self.update_gear_ratios(-1)
                 self.update_counter_values(-1)
-            elif char == ord('q'):  # Exit on pressing 'q'
+            if keys[pygame.K_q]:  # Quit
                 break
 
-            self.display_info(screen)
-            time.sleep(0.01)  # Small sleep to reduce CPU usage
+            self.display_info()  # Update the display based on the current state
+            pygame.time.wait(10)  # Small delay to reduce CPU usage
 
     def start_gear_demo(self):
-        curses.wrapper(self.handle_key_press)
+        self.handle_key_press()  # Directly call the method containing the game loop
 
 
 class Input:
