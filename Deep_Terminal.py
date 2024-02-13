@@ -1,6 +1,6 @@
 import sqlite3
-import curses
-import time
+import sys
+import os
 import pygame
 
 class Terminal:
@@ -33,7 +33,8 @@ class Terminal:
                                                 \________| |____| \___  (____  |__|_|  /
                                                                       \/     \/      \/                
         """
-        return "\\newpage\n" + ascii_header + f"\n{self.counter.get_counters()}\n" + "Type 'help' for a list of commands, or more info.\n"
+        Terminal.newpage()
+        return ascii_header + f"\n{self.counter.get_counters()}\n" + "Type 'help' for a list of commands, or more info.\n"
 
     def process_command(self, command):
         if command in self.commands:
@@ -50,6 +51,11 @@ class Terminal:
             command = command_input.lower()
             output = self.process_command(command)
             print(output)
+    
+    @staticmethod
+    def newpage():
+        # Clear the console screen
+        os.system('cls' if os.name == 'nt' else 'clear')
     
     ##UNUSED##
     def add_external_command(self, command_name, command_function):
@@ -70,7 +76,7 @@ class Terminal:
         if gear_demo_obj.message_queue:
             # Display a general message about the queued messages
             num_messages = len(gear_demo_obj.message_queue)
-            print('\\newpage')
+            Terminal.newpage()
             print(f'{num_messages} new message(s) during traversal period.')
             print("If there are too many, just hold 'enter' to fast forward through them.")
             print("It's highly encouraged to read them though!\n")
@@ -78,7 +84,8 @@ class Terminal:
 
             # Display queued messages in the order they were added (oldest first)
             for message in gear_demo_obj.message_queue:
-                print('\\newpage\n' + message)
+                Terminal.newpage()
+                print(message)
                 input('Input any key to continue > ')  # Wait for user input before continuing
 
         return "Back to main terminal."
@@ -241,13 +248,26 @@ class GearDemo:
         self.accumulated_increment = 0
 
     def run(self):
+        # Store the original file descriptor for standard input
+        stdin_fd = sys.stdin.fileno()
+        stdin_copy = os.dup(stdin_fd)
+
         self.set_rps()  # Set the RPS value via CLI
         pygame.display.init()
         self.screen = pygame.display.set_mode((900, 600))  # Adjust size as needed
-        pygame.font.init() #Initialize font
-        self.font = pygame.font.Font('SourceCodePro-Regular.ttf', 15)
+        pygame.font.init()  # Initialize font
+        self.font = pygame.font.Font('SourceCodePro-Regular.ttf', 12)
+        
+        # Start the gear demo loop
         self.start_gear_demo()
-        pygame.quit()  # Quit Pygame when done
+        
+        # Quit Pygame display
+        pygame.display.quit()
+        pygame.quit()
+
+        # Restore the original standard input
+        os.dup2(stdin_copy, stdin_fd)
+        os.close(stdin_copy)
 
     
     def set_rps(self):
@@ -306,23 +326,54 @@ class GearDemo:
 
     def display_info(self):
         self.screen.fill((0, 0, 0))  # Clear the screen with a black background
+        self.blit_ascii_header(self.screen, self.font)
 
         # Display gear ratios
         gear_ratios_str = ' '.join([f"{gear:.10f}" for gear in self.gear_ratios])
-        ratios_surface = self.font.render(f"Gear Ratios: {gear_ratios_str}", True, (255, 255, 255))
-        self.screen.blit(ratios_surface, (10, 10))  # Adjust position as needed
+        ratios_surface = self.font.render(f"    Gear Ratios: {gear_ratios_str}", True, (255, 255, 255))
+        self.screen.blit(ratios_surface, (10, 430))  # Adjust position as needed
 
         # Display counters
         counters_str = self.terminal.counter.get_counters()
-        counters_surface = self.font.render(f"Counters: {counters_str}", True, (255, 255, 255))
-        self.screen.blit(counters_surface, (10, 40))  # Adjust position as needed
+        counters_surface = self.font.render(f"    Counters: {counters_str}", True, (255, 255, 255))
+        self.screen.blit(counters_surface, (10, 470))  # Adjust position as needed
 
         # Display new messages count if any
         if self.new_messages_count > 0:
-            messages_surface = self.font.render(f"{self.new_messages_count} new message(s) available to read.", True, (255, 255, 255))
-            self.screen.blit(messages_surface, (10, 70))  # Adjust position as needed
+            messages_surface = self.font.render(f"    {self.new_messages_count} new message(s) available to read.", True, (255, 255, 255))
+            self.screen.blit(messages_surface, (10, 500))  # Adjust position as needed
+
+        # Quit message
+        quit_surface = self.font.render("                               Press 'q' to go to the main terminal. (More stuff to check out!)", True, (255, 255, 255))
+        self.screen.blit(quit_surface, (10, 550))
 
         pygame.display.flip()  # Update the screen
+
+    def blit_ascii_header(self, screen, font):
+        ascii_lines = [
+"                        ______ _____ ___________   _____                   _             _ ",
+"                        |  _  |  ___|  ___| ___ \ |_   _|                 (_)           | |",
+"                        | | | | |__ | |__ | |_/ /   | | ___ _ __ _ __ ___  _ _ __   __ _| |",
+"                        | | | |  __||  __||  __/    | |/ _ | '__| '_ ` _ \| | '_ \ / _` | |",
+"                        | |/ /| |___| |___| |       | |  __| |  | | | | | | | | | | (_| | |",
+"                        |___/ \____/\____/\_|       \_/\___|_|  |_| |_| |_|_|_| |_|\__,_|_|",
+"                                                                _______________                    ",
+"                                                                |    \__    _______ _____    _____  ",
+"                                                                |    | |    |_/ __ \\\__  \  /     \ ",
+"                                                            /\__|    | |    |\  ___/ / __ \|  Y Y  \\",
+"                                                            \________| |____| \___  (____  |__|_|  /",
+"                                                                                  \/     \/      \/        ",
+"",
+"                   Welcome To The Gear Ratio Demonstration! Hold the 'up' or 'down' arrow keys to change",
+"                   the gear values. For reference, it takes about 46 billion 'cranks' to make the last",
+"                   gear value hit '1'. That's the size of the Observable Universe's radius in lightyears!"
+        ]
+
+        y_offset = 0  # Starting position
+        for line in ascii_lines:
+            text_surface = font.render(line, True, (255, 255, 255))  # White color
+            screen.blit(text_surface, (10, y_offset))
+            y_offset += font.get_linesize()  # Move to the next line
 
     def handle_key_press(self):
         running = True
@@ -342,7 +393,7 @@ class GearDemo:
                 break
 
             self.display_info()  # Update the display based on the current state
-            pygame.time.wait(10)  # Small delay to reduce CPU usage
+            pygame.time.wait(30)  # Small delay to reduce CPU usage
 
     def start_gear_demo(self):
         self.handle_key_press()  # Directly call the method containing the game loop
@@ -447,7 +498,7 @@ class Input:
         return "Text logged."
 
     def run(self):
-        print("\\newpage")
+        Terminal.newpage()
         message = self.input_message()
         return message + "\nBack to main terminal."
 
@@ -480,7 +531,7 @@ class Read:
 
             if message_data:
                 coord, title, text = message_data
-                print('\\newpage')
+                Terminal.newpage()
                 print(f"Written at {coord}\n\n{title} :\n\n{text}\n")
                 input("\nPress any key to continue > ")  # Wait for user input before continuing
                 return ""
@@ -496,7 +547,8 @@ class Read:
     def check_and_display_messages(coord):
         messages_with_ids = Read.get_messages_for_coord(coord)  # This now includes IDs
         for _, formatted_message in messages_with_ids:  # Unpack the tuple, ignoring the ID
-            print('\\newpage\n' + formatted_message)
+            Terminal.newpage()
+            print(formatted_message)
             input('Input any key to continue > ')
 
     @staticmethod

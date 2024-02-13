@@ -1,3 +1,7 @@
+import sys
+import os
+
+
 class Terminal:
     def __init__(self):
         self.counter = Counter()  # Initialize the counter object
@@ -10,7 +14,8 @@ class Terminal:
         }
 
     def default_message(self):
-        return f"\\newpage\n{self.counter.get_counters()}\n" + "Type 'help' for a list of commands.\n"
+        Terminal.newpage()
+        return f"{self.counter.get_counters()}\n" + "Type 'help' for a list of commands.\n"
     
     def process_command(self, command):
         if command in self.commands:
@@ -29,6 +34,12 @@ class Terminal:
             print(output)
             if command == "exit":
                 break
+    
+    # Utilize this tool at the top of each 'new page'
+    @staticmethod
+    def newpage():
+        # Clear the console screen
+        os.system('cls' if os.name == 'nt' else 'clear')
 
     def add_external_command(self, command_name, command_function):
         self.commands[command_name] = command_function
