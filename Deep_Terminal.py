@@ -466,6 +466,11 @@ class Input:
                 title = ' '.join(map(str, self.terminal.counter.get_counters_list()))
                 break  # Exit the loop if a default title is used
 
+            # Check if the title length exceeds 25 characters
+            if len(title) > 25:
+                print("Title too long! Please limit the title to 25 characters.")
+                continue  # Prompt the user to enter a new title
+
             # Check if the entered title is a reserved command
             if title.lower() in reserved_commands:
                 print("The entered title is a reserved command. Please enter a different title.")
@@ -508,39 +513,62 @@ class Read:
         self.terminal = terminal
 
     def read_command(self):
-        message = ""  # Initialize the message to be returned
         conn = sqlite3.connect('deep_messages.db')
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id, title FROM messages WHERE on_list = 1")
-            messages = cur.fetchall()
+            cur.execute("SELECT id, title FROM messages WHERE on_list = 1 ORDER BY id DESC")
+            all_titles = cur.fetchall()
 
-            if not messages:
-                message += "No viewable messages."
-                return message
+            if not all_titles:
+                return Terminal.newpage() + "No viewable messages."
 
-            print("List of available messages:\n")
-            for msg_id, title in messages:
-                print(f"{title}")
+            page = 0
+            page_size = 10  # Total titles per page, 5 rows with 2 titles each for 5x2 layout
+            titles_per_row = 2  # Titles per row
+            title_width = 30  # Width allocated for each title
 
-            selected_title = input("\nEnter the title of the message to read: ")
-            if (selected_title == "exit"):
-                return "Exiting."
-            cur.execute("SELECT input_coord, title, message FROM messages WHERE title = ?", (selected_title,))
-            message_data = cur.fetchone()
+            while True:
+                Terminal.newpage()  # Clear the screen
+                print(self.terminal.default_message())  # Display the terminal's header
+                print("List of available messages:\n")
 
-            if message_data:
-                coord, title, text = message_data
-                Terminal.newpage()
-                print(f"Written at {coord}\n\n{title} :\n\n{text}\n")
-                input("\nPress any key to continue > ")  # Wait for user input before continuing
-                return ""
-            else:
-                message += "No message found with that title.\n"
+                start_index = page * page_size
+                end_index = start_index + page_size
+                page_titles = all_titles[start_index:end_index]
+
+                for i in range(0, len(page_titles), titles_per_row):
+                    # Format and print titles with fixed width to ensure alignment
+                    row_titles = [f"{title:<{title_width}}" for _, title in page_titles[i:i + titles_per_row]]
+                    print(' '.join(row_titles))
+
+                print("\nPage " + str(page))
+                navigation = "Enter 'next' for more, 'prev' for previous, a title to read, or 'exit' to go back: "
+                command = input(navigation).lower()
+
+                if command == "exit":
+                    break
+                elif command == "next" and len(all_titles) > end_index:
+                    page += 1
+                elif command == "prev" and page > 0:
+                    page -= 1
+                else:
+                    cur.execute("SELECT input_coord, title, message FROM messages WHERE LOWER(title) = LOWER(?) ORDER BY id DESC", (command,))
+                    messages_data = cur.fetchall()
+
+                    if messages_data:
+                        for coord, title, text in messages_data:
+                            Terminal.newpage()
+                            print(f"Written at {coord}\n\n{title} :\n\n{text}\n")
+                            input("\nPress any key to continue > ")
+                    else:
+                        Terminal.newpage()
+                        print("No message found with that title.")
+                        input("Press any key to continue > ")
+
         finally:
             conn.close()
-        
-        return message
+
+        return "Finished reading messages."
 
 
     @staticmethod
