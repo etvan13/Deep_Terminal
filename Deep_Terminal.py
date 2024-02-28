@@ -3,6 +3,8 @@ import sys
 import os
 import pygame
 
+from DilationClasses import *
+
 class Terminal:
     def __init__(self):
         self.counter = Counter()  # Initialize the counter object
@@ -14,7 +16,8 @@ class Terminal:
             "forwards": self.forwards,
             "backwards": self.backwards,
             "input": self.input_command,
-            "read": self.read_command
+            "read": self.read_command,
+            "dilation": self.dilation_command
             # Additional commands can be added here
         }
 
@@ -80,13 +83,13 @@ class Terminal:
             print(f'{num_messages} new message(s) during traversal period.')
             print("If there are too many, just hold 'enter' to fast forward through them.")
             print("It's highly encouraged to read them though!\n")
-            input('Press enter to start reading the messages > ')
+            input('Press \'enter\' to start reading the messages > ')
 
             # Display queued messages in the order they were added (oldest first)
             for message in gear_demo_obj.message_queue:
                 Terminal.newpage()
                 print(message)
-                input('Input any key to continue > ')  # Wait for user input before continuing
+                input('Press \'enter\' to continue > ')  # Wait for user input before continuing
 
         return "Back to main terminal."
 
@@ -109,6 +112,11 @@ class Terminal:
         read_obj = Read(self)
         message = read_obj.run()
         return message  # Use the returned message as the output for the terminal
+    
+    def dilation_command(self):
+        dil_obj = Dilation(self)
+        output = dil_obj.run()
+        return output
 
 
 class Counter:
@@ -437,14 +445,14 @@ class Input:
         print("This is the input command! Use it to input a text message into the system.")
         print("It works as follows:\n")
 
-        print("You input a message pressing enter for a new line")
+        print("You input a message pressing \'enter'\ for a new line")
         print("and type 'END' (all caps) on the last line to finish the message\n")
 
         print("You then are able to choose a title,")
         print("select a coordinate for it to be viewable at (if desired),")
         print("and choosing whether or not it's viewable on the list of readable messages!\n")
 
-        input("Press enter to continue to message creation> ")
+        input("Press \'enter\' to continue to message creation> ")
 
         print("\nEnter the text to log (type 'END' on a new line to finish, 'EXIT' to cancel):")
         lines = []
@@ -458,9 +466,9 @@ class Input:
             lines.append(line)
         text = "\n".join(lines)
 
-        reserved_commands = ["exit", "help", "back"]  # Add more reserved words as needed
+        reserved_commands = ["exit", "help", "next", "back"]  # Add more reserved words as needed
         while True:
-            title = input("Enter a title (default is current coordinate, type 'CANCEL' to abort): ").strip()
+            title = input("Enter a title (default is current coordinate, type 'cancel' to abort): ").strip()
             # Use the current coordinate as the default title if no title is entered
             if not title:
                 title = ' '.join(map(str, self.terminal.counter.get_counters_list()))
@@ -542,14 +550,14 @@ class Read:
                     print(' '.join(row_titles))
 
                 print("\nPage " + str(page))
-                navigation = "Enter 'next' for more, 'prev' for previous, a title to read, or 'exit' to go back: "
+                navigation = "Enter 'next' for more, 'back' for previous, a title to read, or 'exit' to go back: "
                 command = input(navigation).lower()
 
                 if command == "exit":
                     break
                 elif command == "next" and len(all_titles) > end_index:
                     page += 1
-                elif command == "prev" and page > 0:
+                elif command == "back" and page > 0:
                     page -= 1
                 else:
                     cur.execute("SELECT input_coord, title, message FROM messages WHERE LOWER(title) = LOWER(?) ORDER BY id DESC", (command,))
@@ -559,16 +567,16 @@ class Read:
                         for coord, title, text in messages_data:
                             Terminal.newpage()
                             print(f"Written at {coord}\n\n{title} :\n\n{text}\n")
-                            input("\nPress any key to continue > ")
+                            input("\nPress \'enter\' to continue > ")
                     else:
                         Terminal.newpage()
                         print("No message found with that title.")
-                        input("Press any key to continue > ")
+                        input("Press \'enter\' to continue > ")
 
         finally:
             conn.close()
 
-        return "Finished reading messages."
+        return "Finished reading messages. "
 
 
     @staticmethod
@@ -577,7 +585,7 @@ class Read:
         for _, formatted_message in messages_with_ids:  # Unpack the tuple, ignoring the ID
             Terminal.newpage()
             print(formatted_message)
-            input('Input any key to continue > ')
+            input('Press \'enter\' to continue > ')
 
     @staticmethod
     def get_messages_for_coord(display_coord):
@@ -599,3 +607,83 @@ class Read:
         print(self.terminal.default_message())
         response = self.read_command()
         return response + "Back to main terminal." # Return the response for the terminal to handle
+
+
+class Dilation:
+    def __init__(self, terminal):
+        self.terminal = terminal
+        self.commands = {
+            "help": self.show_help,
+            "inevitable progression": self.inevitable_progression,
+            "spacetime dilation": self.spacetime_dilation,
+        }
+
+    def show_help(self):
+        msg = "List of dilation demos:\n"
+        return msg + "- help\n- inevitable progression\n- spacetime dilation"
+
+    def inevitable_progression(self):
+        options = {
+            "1d demo": OneDDemo,
+            "2d demo": TwoDDemo,
+            "3d demo": ThreeDDemo,
+            "graph view": GraphView,
+        }
+        return self.show_options(options, "Inevitable Progression Options")
+
+    def spacetime_dilation(self):
+        options = {
+            "complex observer": TimeDilation,
+            "unknown": UnknownFunctionality,
+        }
+        return self.show_options(options, "Spacetime Dilation Options")
+
+    def show_options(self, options, title):
+        print(f"{title}:")
+        for key in options.keys():
+            print(f"- {key}")
+        
+        print()
+        while True:
+            selected_option = input("Select an option by typing its name (or type 'exit' to return to the main terminal): ").lower()
+            
+            if selected_option == "exit":
+                return "exit_to_main"  # Use a specific flag to indicate exiting to the main terminal
+
+            elif selected_option in options:
+                selected_class = options[selected_option]()
+                Terminal.newpage()
+                result = selected_class.run()
+                if result == "exit_to_main":  # Check if the sub-command also requests to exit to the main terminal
+                    return "exit_to_main"
+                break
+            else:
+                print("Invalid option selected. Please try again or type 'exit' to return to the main terminal.")
+
+    def process_command(self, command):
+        command = command.lower()
+        if command in self.commands:
+            response = self.commands[command]()
+            if response == "exit_to_main":  # Check for the exit flag
+                return "exit_to_main"
+            elif response is None:
+                response = ""
+        else:
+            response = "Unknown command.\n"
+        return response
+
+    def run(self):
+        print()
+        print(self.show_help())
+        while True:
+            print()
+            command_input = input("Dilation> ")
+            command = command_input.lower()
+
+            if command == "exit":
+                return "Exiting back to main terminal."
+            else:
+                output = self.process_command(command)
+                if output == "exit_to_main":  # Handle the exit flag to break out of the loop
+                    return "Exiting back to main terminal."
+                print(output)
