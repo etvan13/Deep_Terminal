@@ -255,6 +255,11 @@ class GearDemo:
         self.rps = 1  # Default RPS value
         self.accumulated_increment = 0
 
+        # Initialize Gear images
+        self.gear_images, self.gear_rects = self.load_and_scale_gear_images()
+        # Sets the gears to their correct state initially
+        self.update_gear_pics()
+
     def run(self):
         # Store the original file descriptor for standard input
         stdin_fd = sys.stdin.fileno()
@@ -280,14 +285,40 @@ class GearDemo:
     
     def set_rps(self):
         try:
-            rps_input = float(input("Enter RPS (greater than 0 and up to 1): "))
-            if 0 < rps_input <= 1:
-                self.rps = rps_input
-                print(f"RPS set to {self.rps}")
+            rps_input = float(input("A speed 1-10 (10 being the fastest 1 the slowest): "))
+            if 0 < rps_input <= 10:
+                self.rps = 1.5 * (rps_input/10)
             else:
-                print("Invalid RPS value. Please enter a number greater than 0 and up to 1.")
+                print("Invalid RPS value. Please enter a number greater than 0 and up to 10.")
         except ValueError:
             print("Invalid input. Please enter a valid number.")
+
+    def load_and_scale_gear_images(self):
+        gear_images = []
+        gear_rects = []
+        window_size = (900, 600)
+        original_image = pygame.image.load("FinalGear.png")
+        scale_factor = .18  # Scale factor to adjust gear size
+        scaled_image = pygame.transform.scale(original_image, (int(original_image.get_width() * scale_factor), 
+                                                            int(original_image.get_height() * scale_factor)))
+
+        # Calculate the total width of all gears combined
+        total_gears_width = sum([scaled_image.get_width() for _ in range(6)])
+        # Calculate the remaining space after placing all gears
+        remaining_space = window_size[0] - total_gears_width
+        # Distribute the remaining space into 7 parts (6 gaps + 1 extra for margins)
+        gap_size = remaining_space // 7
+
+        for i in range(6):
+            gear_images.append(scaled_image)
+            gear_rect = scaled_image.get_rect()
+            # Position the center of each gear based on its index
+            # New position logic to bring gears closer together
+            gear_rect.center = (gap_size + i * (scaled_image.get_width() + gap_size), window_size[1] // 2)
+            gear_rects.append(gear_rect)
+        
+        return gear_images, gear_rects
+
 
     def update_gear_ratios(self, direction):
         # Base increment value for the first gear, as a fraction of a full rotation
@@ -303,7 +334,18 @@ class GearDemo:
             elif self.gear_ratios[i] < 0:
                 self.gear_ratios[i] = 1 - (-self.gear_ratios[i] % 1)  # Wrap around to just below 1
 
-        #self.terminal.counter.spec_change(self.accumulated_increment)
+    def update_gear_pics(self):
+        # Store the original scaled images to rotate them from scratch each frame
+        if not hasattr(self, 'original_gear_images'):
+            self.original_gear_images = self.gear_images.copy()
+
+        # Update each gear's rotation angle based on its ratio
+        for i, gear_ratio in enumerate(self.gear_ratios):
+            angle = -(gear_ratio * 360)
+            # Always rotate from the original scaled image
+            self.gear_images[i] = pygame.transform.rotate(self.original_gear_images[i], angle)
+            # Recalculate the gear_rect to account for the change in image dimensions after rotation
+            self.gear_rects[i] = self.gear_images[i].get_rect(center=self.gear_rects[i].center)
 
     def update_counter_values(self, direction):
         # Accumulate increments in a floating-point variable
@@ -335,6 +377,17 @@ class GearDemo:
     def display_info(self):
         self.screen.fill((0, 0, 0))  # Clear the screen with a black background
         self.blit_ascii_header(self.screen, self.font)
+
+        # Display each gear
+        for i, gear_image in enumerate(self.gear_images):
+            # Get the current top-left coordinates
+            current_topleft_x, current_topleft_y = self.gear_rects[i].topleft
+            # Adjust the y-coordinate by adding or subtracting the desired amount
+            new_topleft_y = current_topleft_y + 45
+            # Adjust the y-coordinate by adding or subtracting the desired amount
+            new_topleft_x = current_topleft_x + 70
+            # Blit the gear image at the new position
+            self.screen.blit(gear_image, (new_topleft_x, new_topleft_y))
 
         # Display gear ratios
         gear_ratios_str = ' '.join([f"{gear:.10f}" for gear in self.gear_ratios])
@@ -393,9 +446,11 @@ class GearDemo:
             keys = pygame.key.get_pressed()  # Get the state of all keyboard buttons
             if keys[pygame.K_UP]:
                 self.update_gear_ratios(1)
+                self.update_gear_pics()
                 self.update_counter_values(1)
             if keys[pygame.K_DOWN]:
                 self.update_gear_ratios(-1)
+                self.update_gear_pics()
                 self.update_counter_values(-1)
             if keys[pygame.K_q]:  # Quit
                 break
