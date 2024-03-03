@@ -2,6 +2,7 @@ import sqlite3
 import sys
 import os
 import pygame
+import math
 
 from DilationClasses import *
 
@@ -256,7 +257,8 @@ class GearDemo:
         self.accumulated_increment = 0
 
         # Initialize Gear images
-        self.gear_images, self.gear_rects = self.load_and_scale_gear_images()
+        self.gear_images = []
+        self.gear_rects = self.load_and_scale_gear_images()
         # Sets the gears to their correct state initially
         self.update_gear_pics()
 
@@ -287,37 +289,40 @@ class GearDemo:
         try:
             rps_input = float(input("A speed 1-10 (10 being the fastest 1 the slowest): "))
             if 0 < rps_input <= 10:
-                self.rps = 1.5 * (rps_input/10)
+                self.rps = rps_input/10
             else:
                 print("Invalid RPS value. Please enter a number greater than 0 and up to 10.")
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
     def load_and_scale_gear_images(self):
-        gear_images = []
-        gear_rects = []
         window_size = (900, 600)
         original_image = pygame.image.load("FinalGear.png")
         scale_factor = .18  # Scale factor to adjust gear size
         scaled_image = pygame.transform.scale(original_image, (int(original_image.get_width() * scale_factor), 
                                                             int(original_image.get_height() * scale_factor)))
 
-        # Calculate the total width of all gears combined
+        self.rotated_gear_images = []  # List to store lists of rotated images for each gear
+        gear_rects = []  # List to store the initial rect for each gear
+        rotations_per_gear = [60, 360, 2160, 12960, 77760, 466560]  # Define the number of rotations for each gear
+
+        # Calculate the total width of all gears combined and the remaining space
         total_gears_width = sum([scaled_image.get_width() for _ in range(6)])
-        # Calculate the remaining space after placing all gears
         remaining_space = window_size[0] - total_gears_width
-        # Distribute the remaining space into 7 parts (6 gaps + 1 extra for margins)
-        gap_size = remaining_space // 7
+        gap_size = remaining_space // 7  # Distribute the remaining space into 7 parts
 
         for i in range(6):
-            gear_images.append(scaled_image)
-            gear_rect = scaled_image.get_rect()
-            # Position the center of each gear based on its index
-            # New position logic to bring gears closer together
+            # Ensure the step value is at least 1
+            step = max(1, math.ceil(360 / rotations_per_gear[i]))
+            gear_images = [pygame.transform.rotate(scaled_image, angle) for angle in range(0, 360, step)]
+            self.rotated_gear_images.append(gear_images)
+
+            # Calculate the position for each gear to be evenly spaced
+            gear_rect = gear_images[0].get_rect()  # Use the first rotated image to get the rect
             gear_rect.center = (gap_size + i * (scaled_image.get_width() + gap_size), window_size[1] // 2)
             gear_rects.append(gear_rect)
         
-        return gear_images, gear_rects
+        return gear_rects  # Only returning gear_rects as gear_images now varies per gear
 
 
     def update_gear_ratios(self, direction):
@@ -334,18 +339,22 @@ class GearDemo:
             elif self.gear_ratios[i] < 0:
                 self.gear_ratios[i] = 1 - (-self.gear_ratios[i] % 1)  # Wrap around to just below 1
 
-    def update_gear_pics(self):
-        # Store the original scaled images to rotate them from scratch each frame
-        if not hasattr(self, 'original_gear_images'):
-            self.original_gear_images = self.gear_images.copy()
 
-        # Update each gear's rotation angle based on its ratio
+    def update_gear_pics(self):
+        # Clear the current gear images list
+        self.gear_images.clear()
+
+        # Update each gear's rotation angle based on its ratio and select the pre-generated image
         for i, gear_ratio in enumerate(self.gear_ratios):
-            angle = -(gear_ratio * 360)
-            # Always rotate from the original scaled image
-            self.gear_images[i] = pygame.transform.rotate(self.original_gear_images[i], angle)
-            # Recalculate the gear_rect to account for the change in image dimensions after rotation
-            self.gear_rects[i] = self.gear_images[i].get_rect(center=self.gear_rects[i].center)
+            num_images = len(self.rotated_gear_images[i])
+            angle_index = int(-1 * gear_ratio * num_images) % num_images
+            current_gear_image = self.rotated_gear_images[i][angle_index]
+
+            # Append the current image to gear_images for display
+            self.gear_images.append(current_gear_image)
+
+            # Update the gear_rect to ensure it's centered properly
+            self.gear_rects[i] = current_gear_image.get_rect(center=self.gear_rects[i].center)
 
     def update_counter_values(self, direction):
         # Accumulate increments in a floating-point variable
@@ -392,7 +401,7 @@ class GearDemo:
         # Display gear ratios
         gear_ratios_str = ' '.join([f"{gear:.10f}" for gear in self.gear_ratios])
         ratios_surface = self.font.render(f"    Gear Ratios: {gear_ratios_str}", True, (255, 255, 255))
-        self.screen.blit(ratios_surface, (10, 430))  # Adjust position as needed
+        self.screen.blit(ratios_surface, (10, 440))  # Adjust position as needed
 
         # Display counters
         counters_str = self.terminal.counter.get_counters()
@@ -437,6 +446,7 @@ class GearDemo:
             y_offset += font.get_linesize()  # Move to the next line
 
     def handle_key_press(self):
+        clock = pygame.time.Clock()
         running = True
         while running:
             for event in pygame.event.get():
@@ -456,7 +466,8 @@ class GearDemo:
                 break
 
             self.display_info()  # Update the display based on the current state
-            pygame.time.wait(30)  # Small delay to reduce CPU usage
+            #pygame.time.wait()  # Small delay to reduce CPU usage
+            clock.tick(120)
 
     def start_gear_demo(self):
         self.handle_key_press()  # Directly call the method containing the game loop
