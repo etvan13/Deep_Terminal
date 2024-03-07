@@ -446,7 +446,7 @@ class GearDemo:
             y_offset += font.get_linesize()  # Move to the next line
 
     def handle_key_press(self):
-        clock = pygame.time.Clock()
+        #clock = pygame.time.Clock()
         running = True
         while running:
             for event in pygame.event.get():
@@ -464,10 +464,9 @@ class GearDemo:
                 self.update_counter_values(-1)
             if keys[pygame.K_q]:  # Quit
                 break
-
             self.display_info()  # Update the display based on the current state
-            #pygame.time.wait()  # Small delay to reduce CPU usage
-            clock.tick(120)
+            pygame.time.wait(5)  # Small delay to reduce CPU usage
+            #clock.tick(60)
 
     def start_gear_demo(self):
         self.handle_key_press()  # Directly call the method containing the game loop
