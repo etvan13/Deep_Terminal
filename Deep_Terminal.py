@@ -679,66 +679,45 @@ class Dilation:
         self.terminal = terminal
         self.commands = {
             "help": self.show_help,
-            "inevitable progression": self.inevitable_progression,
-            "spacetime dilation": self.spacetime_dilation,
+            "1d demo": self.one_d_demo,
+            "time dilation": self.time_dilation,
         }
 
     def show_help(self):
+        Terminal.newpage()
         msg = "List of dilation demos:\n"
-        return msg + "- help\n- inevitable progression\n- spacetime dilation"
+        return msg + "- help\n- 1d demo\n- time dilation"
 
-    def inevitable_progression(self):
-        options = {
-            "1d demo": OneDDemo,
-            "2d demo": TwoDDemo,
-            "3d demo": ThreeDDemo,
-            "graph view": GraphView,
-        }
-        return self.show_options(options, "Inevitable Progression Options")
+    def one_d_demo(self):
+        # Assuming OneDDemo has a run() method
+        demo = OneDDemo(self.terminal.newpage)  # Instantiate the OneDDemo class
+        Terminal.newpage()  # Clear the terminal screen before running the demo
+        demo.run()  # Run the 1D demo
+        input("Press 'enter' to return to the main Terminal")  # Pause before returning
+        return "Exiting back to main terminal."
 
-    def spacetime_dilation(self):
-        options = {
-            "complex observer": TimeDilation,
-            "unknown": UnknownFunctionality,
-        }
-        return self.show_options(options, "Spacetime Dilation Options")
-
-    def show_options(self, options, title):
-        print(f"{title}:")
-        for key in options.keys():
-            print(f"- {key}")
-        
-        print()
-        while True:
-            selected_option = input("Select an option by typing its name (or type 'exit' to return to the main terminal): ").lower()
-            
-            if selected_option == "exit":
-                return "exit_to_main"  # Use a specific flag to indicate exiting to the main terminal
-
-            elif selected_option in options:
-                selected_class = options[selected_option]()
-                Terminal.newpage()
-                result = selected_class.run()
-                if result == "exit_to_main":  # Check if the sub-command also requests to exit to the main terminal
-                    return "exit_to_main"
-                break
-            else:
-                print("Invalid option selected. Please try again or type 'exit' to return to the main terminal.")
+    def time_dilation(self):
+        # Assuming TimeDilation has a run() method
+        demo = TimeDilation(self.terminal.newpage)  # Instantiate the TimeDilation class
+        Terminal.newpage()  # Clear the terminal screen before running the demo
+        demo.run()  # Run the Time Dilation demo
+        input("Press 'enter' to return to the main Terminal")  # Pause before returning
+        return "Exiting back to main terminal."
 
     def process_command(self, command):
         command = command.lower()
         if command in self.commands:
-            response = self.commands[command]()
-            if response == "exit_to_main":  # Check for the exit flag
-                return "exit_to_main"
-            elif response is None:
-                response = ""
+            if command == "help":  # Check if the command is 'help'
+                print(self.show_help())  # Print the help message directly
+            else:
+                # Capture the return value from the command execution and return it
+                return self.commands[command]()  
+        elif command == "exit":
+            return "Exiting back to main terminal."
         else:
-            response = "Unknown command.\n"
-        return response
+            print("Unknown command.\n")
 
     def run(self):
-        print()
         print(self.show_help())
         while True:
             print()
@@ -748,7 +727,11 @@ class Dilation:
             if command == "exit":
                 return "Exiting back to main terminal."
             else:
-                output = self.process_command(command)
-                if output == "exit_to_main":  # Handle the exit flag to break out of the loop
-                    return "Exiting back to main terminal."
-                print(output)
+                output = self.process_command(command)  # Capture the output from process_command
+                if output == "Exiting back to main terminal.":
+                    return output  # Exit the loop if the command indicates to return to the main terminal
+                elif output:  # Check if there's any output to print
+                    print(output)
+
+    
+
