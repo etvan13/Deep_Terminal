@@ -123,7 +123,6 @@ class Terminal:
         return "Exiting back to main terminal."
 
 
-
 class Counter:
     def __init__(self):
         self.counters = [0] * 6  # Initialize six counters
@@ -287,7 +286,6 @@ class GearDemo:
         # Restore the original standard input
         os.dup2(stdin_copy, stdin_fd)
         os.close(stdin_copy)
-
     
     def set_rps(self):
         try:
@@ -328,7 +326,6 @@ class GearDemo:
         
         return gear_rects  # Only returning gear_rects as gear_images now varies per gear
 
-
     def update_gear_ratios(self, direction):
         # Base increment value for the first gear, as a fraction of a full rotation
         base_increment = direction * self.rps / 60
@@ -342,7 +339,6 @@ class GearDemo:
                 self.gear_ratios[i] -= int(self.gear_ratios[i])  # Keep the fractional part only
             elif self.gear_ratios[i] < 0:
                 self.gear_ratios[i] = 1 - (-self.gear_ratios[i] % 1)  # Wrap around to just below 1
-
 
     def update_gear_pics(self):
         # Clear the current gear images list
@@ -647,7 +643,6 @@ class Read:
 
         return "Finished reading messages. "
 
-
     @staticmethod
     def check_and_display_messages(coord):
         messages_with_ids = Read.get_messages_for_coord(coord)  # This now includes IDs
@@ -670,7 +665,6 @@ class Read:
             formatted_message = (f"Written at {input_coord}\n\n{title} :\n\n{text}\n\nAuto display at {' '.join(map(str, display_coord))}\n")
             messages.append((msg_id, formatted_message))  # Include the ID with each message
         return messages
-
 
     def run(self):
         print(self.terminal.default_message())
