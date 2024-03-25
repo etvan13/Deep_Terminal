@@ -1,4 +1,4 @@
-from decimal import Decimal, getcontext
+from decimal import Decimal, getcontext, InvalidOperation
 #-------Sub classes for Dilation--------#
 
 #--------------------------Inevitable Progression---------------------------#
@@ -301,9 +301,9 @@ class TimeDilation:
                 indicating a quicker traversal of spacetime, as the distance to the target point stretches but 
                 must still fit within the original distance.
             Example: If the target is 10 units away and Observer B's movement implies they are now 11 units 
-                away, their progression rate increases. Their faster rate of 1.22222 means they cover more ground 
-                in spacetime, fitting what is now perceived as 12.22222 units into the original 10-step journey 
-                towards the target.
+                away, their progression rate increases. Their faster rate of 1.22222 means they cover more 
+                ground in spacetime, fitting what is now perceived as 12.22222 units into the original 
+                10-step journey towards the target.
         
         Press 'enter' to begin'''
             
@@ -323,11 +323,25 @@ class TimeDilation:
     def calculate_distance(self, x, target_position):
         return abs(target_position - x)
 
+    # Function to get correct initial integer for final point
+    @staticmethod
+    def get_positive_integer(prompt):
+        while True:
+            try:
+                value = Decimal(input(prompt))
+                if value > 0 and value == value.to_integral_value():
+                    return value
+                else:
+                    print("Please enter a non-zero positive whole number.")
+            except InvalidOperation:
+                print("Invalid input. Please enter a valid number.")
+
     def main(self):
         self.show_intro()
 
         observer_position = Decimal('0') # Point A on x-observer_position
-        target_position = Decimal(input("Enter the point to reach (Non-zero Positive Integer): "))  # Point B on x-observer_position
+        target_position = self.get_positive_integer("Enter the point to reach (Non-zero Positive Integer): ")  # Point B on x-observer_position
+        self.newpage()
 
         observerA_spacetime_traveled = Decimal('0')
         observerA_time_dilation_rate = Decimal('1')
@@ -342,7 +356,11 @@ class TimeDilation:
 
         while True:
             print()
+            print("Input 'exit' to return to main Terminal.")
             move = input("Enter movement direction (l(add gravity)/r(natural flow forwards): ")
+            if (move == 'exit'):
+                break
+
             print()
             print("----------------------------------------------------------")
 

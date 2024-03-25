@@ -18,7 +18,7 @@ class Terminal:
             "backwards": self.backwards,
             "input": self.input_command,
             "read": self.read_command,
-            "dilation": self.dilation_command
+            "time dilation": self.dilation_command
             # Additional commands can be added here
         }
 
@@ -67,7 +67,7 @@ class Terminal:
 
     ##COMMANDS##
     def show_help(self):
-        return "- help\n- greetings\n- gear demo\n- forwards\n- backwards\n- input\n- read"
+        return "- help\n- greetings\n- gear demo\n- forwards\n- backwards\n- input\n- read\n- time dilation"
     
     def greet(self):
         return "Hello Universe!"
@@ -115,9 +115,13 @@ class Terminal:
         return message  # Use the returned message as the output for the terminal
     
     def dilation_command(self):
-        dil_obj = Dilation(self)
-        output = dil_obj.run()
-        return output
+        # Assuming TimeDilation class is imported from dilationclasses.py
+        demo = TimeDilation(self.newpage)  # Instantiate TimeDilation with newpage function
+        self.newpage()  # Optionally clear the terminal screen before running the demo
+        demo.run()  # Directly run the Time Dilation simulation
+        input("Press 'Enter' to return to the main terminal\n> ")  # Pause before returning
+        return "Exiting back to main terminal."
+
 
 
 class Counter:
@@ -672,66 +676,63 @@ class Read:
         print(self.terminal.default_message())
         response = self.read_command()
         return response + "Back to main terminal." # Return the response for the terminal to handle
-
-
-class Dilation:
-    def __init__(self, terminal):
-        self.terminal = terminal
-        self.commands = {
-            "help": self.show_help,
-            "1d demo": self.one_d_demo,
-            "time dilation": self.time_dilation,
-        }
-
-    def show_help(self):
-        Terminal.newpage()
-        msg = "List of dilation demos:\n"
-        return msg + "- help\n- 1d demo\n- time dilation"
-
-    def one_d_demo(self):
-        # Assuming OneDDemo has a run() method
-        demo = OneDDemo(self.terminal.newpage)  # Instantiate the OneDDemo class
-        Terminal.newpage()  # Clear the terminal screen before running the demo
-        demo.run()  # Run the 1D demo
-        input("Press 'enter' to return to the main Terminal")  # Pause before returning
-        return "Exiting back to main terminal."
-
-    def time_dilation(self):
-        # Assuming TimeDilation has a run() method
-        demo = TimeDilation(self.terminal.newpage)  # Instantiate the TimeDilation class
-        Terminal.newpage()  # Clear the terminal screen before running the demo
-        demo.run()  # Run the Time Dilation demo
-        input("Press 'enter' to return to the main Terminal")  # Pause before returning
-        return "Exiting back to main terminal."
-
-    def process_command(self, command):
-        command = command.lower()
-        if command in self.commands:
-            if command == "help":  # Check if the command is 'help'
-                print(self.show_help())  # Print the help message directly
-            else:
-                # Capture the return value from the command execution and return it
-                return self.commands[command]()  
-        elif command == "exit":
-            return "Exiting back to main terminal."
-        else:
-            print("Unknown command.\n")
-
-    def run(self):
-        print(self.show_help())
-        while True:
-            print()
-            command_input = input("Dilation> ")
-            command = command_input.lower()
-
-            if command == "exit":
-                return "Exiting back to main terminal."
-            else:
-                output = self.process_command(command)  # Capture the output from process_command
-                if output == "Exiting back to main terminal.":
-                    return output  # Exit the loop if the command indicates to return to the main terminal
-                elif output:  # Check if there's any output to print
-                    print(output)
-
     
 
+# class Dilation:
+#     def __init__(self, terminal):
+#         self.terminal = terminal
+#         self.commands = {
+#             "help": self.show_help,
+#             "1d demo": self.one_d_demo,
+#             "time dilation": self.time_dilation,
+#         }
+
+#     def show_help(self):
+#         Terminal.newpage()
+#         msg = "List of dilation demos:\n"
+#         return msg + "- help\n- 1d demo\n- time dilation"
+
+#     def one_d_demo(self):
+#         # Assuming OneDDemo has a run() method
+#         demo = OneDDemo(self.terminal.newpage)  # Instantiate the OneDDemo class
+#         Terminal.newpage()  # Clear the terminal screen before running the demo
+#         demo.run()  # Run the 1D demo
+#         input("Press 'enter' to return to the main Terminal")  # Pause before returning
+#         return "Exiting back to main terminal."
+
+#     def time_dilation(self):
+#         # Assuming TimeDilation has a run() method
+#         demo = TimeDilation(self.terminal.newpage)  # Instantiate the TimeDilation class
+#         Terminal.newpage()  # Clear the terminal screen before running the demo
+#         demo.run()  # Run the Time Dilation demo
+#         input("Press 'enter' to return to the main Terminal")  # Pause before returning
+#         return "Exiting back to main terminal."
+
+#     def process_command(self, command):
+#         command = command.lower()
+#         if command in self.commands:
+#             if command == "help":  # Check if the command is 'help'
+#                 print(self.show_help())  # Print the help message directly
+#             else:
+#                 # Capture the return value from the command execution and return it
+#                 return self.commands[command]()  
+#         elif command == "exit":
+#             return "Exiting back to main terminal."
+#         else:
+#             print("Unknown command.\n")
+
+#     def run(self):
+#         print(self.show_help())
+#         while True:
+#             print()
+#             command_input = input("Dilation> ")
+#             command = command_input.lower()
+
+#             if command == "exit":
+#                 return "Exiting back to main terminal."
+#             else:
+#                 output = self.process_command(command)  # Capture the output from process_command
+#                 if output == "Exiting back to main terminal.":
+#                     return output  # Exit the loop if the command indicates to return to the main terminal
+#                 elif output:  # Check if there's any output to print
+#                     print(output)
