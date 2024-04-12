@@ -1,16 +1,95 @@
 from decimal import Decimal, getcontext, InvalidOperation
-#-------Sub classes for Dilation--------#
+from timer_utils import*
 
+#-------Sub classes for Dilation--------#
+import pygame
+import sys
+import os
 #--------------------------Inevitable Progression---------------------------#
+
 class OneDDemo:
-    def __init__(self, newpage_func):
+    def __init__(self, newpage_func=None):
+        # Initialize Pygame
+        pygame.init()
+
+        # Hide the cursor
+        pygame.mouse.set_visible(False)
+
+        # Screen dimensions
+        self.width, self.height = 800, 600
+        self.screen = pygame.display.set_mode((self.width, self.height))
+
+        # Line start and end points based on a fixed length of 200 units
+        line_length = 300
+        self.start_pos = ((self.width - line_length) // 2, self.height // 2)
+        self.end_pos = (self.start_pos[0] + line_length, self.height // 2)
+
+        # Initial position of the point, starting at the beginning of the line
+        self.point_pos = [self.start_pos[0], self.start_pos[1]]
+
+        # Movement unit per key hold
+        self.movement_unit = 1
+
+        # Key hold state
+        self.left_key_down = False
+        self.right_key_down = False
+
+        # Store the function to navigate to a new page
         self.newpage = newpage_func
 
     def run(self):
-        print("One D Demo")
-        input("> Temp")
-        return "exit_to_main"
-    
+        stdin_fd = sys.stdin.fileno()
+        stdin_copy = os.dup(stdin_fd)
+
+        print("One D Demo - Use Left/Right arrow keys to move, 'q' to quit")
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        running = False  # Quit if 'q' is pressed
+                    elif event.key == pygame.K_LEFT:
+                        self.left_key_down = True
+                    elif event.key == pygame.K_RIGHT:
+                        self.right_key_down = True
+                elif event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LEFT:
+                        self.left_key_down = False
+                    elif event.key == pygame.K_RIGHT:
+                        self.right_key_down = False
+
+            # Move the point if a key is held down
+            if self.left_key_down:
+                self.point_pos[0] = max(self.start_pos[0], self.point_pos[0] - self.movement_unit)
+            if self.right_key_down:
+                self.point_pos[0] = min(self.end_pos[0], self.point_pos[0] + self.movement_unit)
+
+            # Fill the screen with a black background
+            self.screen.fill((0, 0, 0))
+
+            # Draw the line in white
+            pygame.draw.line(self.screen, (255, 255, 255), self.start_pos, self.end_pos, 2)
+
+            # Draw the point in red
+            pygame.draw.circle(self.screen, (255, 0, 0), (self.point_pos[0], self.point_pos[1]), 5)
+
+            # Update the display
+            pygame.display.flip()
+
+            # Cap the frame rate
+            pygame.time.Clock().tick(60)
+
+        # Quit Pygame
+        pygame.quit()
+        
+        # Restore the original standard input
+        os.dup2(stdin_copy, stdin_fd)
+        os.close(stdin_copy)
+
+
+   
 
 #--------------------------Spacetime Dilation---------------------------#
     
@@ -25,6 +104,7 @@ class TimeDilation:
     def show_intro(self, level=0):
         # Base case for the recursive function
         if level == 0:
+            reset_activity_timer(300)
             self.newpage()
             intro_text ='''
 
@@ -36,8 +116,11 @@ class TimeDilation:
                 3. Observer B: Moves away from gravity, where time speeds up.
             
             How It Works:
-                * Move "Left": Adds gravity for Observer A, slowing their time.
-                * Move "Right": Reduces gravity for Observer B, speeding up their time.
+                * Movement "Left": 
+                    - Adds gravity for Observer A, slowing their time.
+                    - Reduces gravity for Observer B, speeding up their time.
+                * Movement "Right":
+                    - Consistent flow  of time where all observers are stationary
                 
             Your Mission: Watch as Observer A aims for a target. Your actions influence their journey, 
                 showcasing how gravity bends the fabric of time.
@@ -47,6 +130,7 @@ class TimeDilation:
         Press 'enter' to begin, or type "expand" and press 'enter' to read further!\n'''
             
         elif level == 1:
+            reset_activity_timer(300)
             self.newpage()
             intro_text = '''
     The Triangle of Observers:
@@ -85,6 +169,7 @@ class TimeDilation:
                     
 
         elif level == 2:
+            reset_activity_timer(300)
             self.newpage()
             intro_text = '''
     Understanding Physical Space and Spacetime
@@ -137,6 +222,7 @@ class TimeDilation:
         Press 'enter' to begin, or type "expand" and press 'enter' to read further!\n'''
         
         elif level == 3:
+            reset_activity_timer(300)
             self.newpage()
             intro_text = '''
     Spacetime Through the Lens of Complex Numbers
@@ -177,6 +263,7 @@ class TimeDilation:
             Press 'enter' to begin, or type "expand" and press 'enter' to see the raw code!\n'''
         
         elif level == 4:
+            reset_activity_timer(300)
             self.newpage()
             intro_text = '''
     Raw Code of the math in the Program:
@@ -215,6 +302,7 @@ class TimeDilation:
             Press 'enter' to begin, or type "expand" and press 'enter' to read further into the workings!\n'''
 
         elif level == 5:
+            reset_activity_timer(360)
             self.newpage()
             intro_text = '''
     Further Explanation
@@ -273,6 +361,7 @@ class TimeDilation:
             Press 'enter' to begin or "expand" once more for conceptual wrap'''
 
         elif level == 6:
+            reset_activity_timer(360)
             self.newpage()
             intro_text = '''
     Final Conceptual of Code
@@ -338,6 +427,7 @@ class TimeDilation:
 
     def main(self):
         self.show_intro()
+        reset_activity_timer() # Reset for inactivity
 
         observer_position = Decimal('0') # Point A on x-observer_position
         target_position = self.get_positive_integer("Enter the point to reach (Non-zero Positive Integer): ")  # Point B on x-observer_position
@@ -355,6 +445,7 @@ class TimeDilation:
         print(f"Current shortest distance: {target_position - observer_position}")   
 
         while True:
+            reset_activity_timer() # Reset for inactivity
             print()
             print("Input 'exit' to return to main Terminal.")
             move = input("Enter movement direction (l(add gravity)/r(natural flow forwards): ")
@@ -393,11 +484,11 @@ class TimeDilation:
             your_spacetime_traveled += Decimal('1')  # Increment total distance considering imaginary
 
             print("--- Your Spacetime Perspective ---")
-            print(f"From your vantage point, observing spacetime unfold at a constant rate of 1 temporal unit per movement:")
+            print(f"From your vantage point, observing spacetime unfold at a constant rate of 1 second per movement:")
             print(f"Convergence Point: ({target_position}, 0)")
             print(f"Your Current Coordinate: ({observer_position}, 0)")
             print(f"Dimensional Distance to Convergence: {curr_distance} units")
-            print(f"Spacetime Passage: {your_spacetime_traveled} temporal units")
+            print(f"Spacetime Passage: {your_spacetime_traveled} seconds")
             print()
 
             print("--- Observer A's Gravitational Journey ---")
@@ -414,13 +505,14 @@ class TimeDilation:
             print(f"Spacetime Traversed: {observerB_spacetime_traveled:.5f} units")
 
             if observer_position == target_position:
+                reset_activity_timer() # Reset for inactivity
                 print("\nYou've reached the convergence point in spacetime!")
                 print("\n--- Journey Recap ---")
                 print(f"Throughout your journey spanning {your_spacetime_traveled} seconds:")
                 print(f"Observer A (approaching gravity) experienced a passage of {observerA_spacetime_traveled:.5f} seconds/units.")
                 print(f"Observer B (receding from gravity) navigated through {observerB_spacetime_traveled:.5f} seconds/units.")
                 print("\n--- Relative Time Flow ---")
-                print(f"From your vantage point in spacetime, each temporal unit (second/space unit) for you corresponded to:")
+                print(f"From your vantage point in spacetime, each temporal unit (second/spatial unit) for you corresponded to:")
                 print(f"{observerA_time_dilation_rate:.5f} seconds for Observer A, illustrating the dilation of time near stronger gravity.")
                 print(f"{observerB_time_contraction_rate:.5f} seconds for Observer B, reflecting the contraction of time as gravity lessens.")
                 print("\nThis encapsulation showcases the relativity of time and space as influenced by gravity,")
@@ -432,3 +524,15 @@ class TimeDilation:
     def run(self):
         self.main()
         return "exit_to_main"
+
+
+# t' = t * sqrt(1-(2GM/rc^2)) general relativity
+
+# t' = t * sqrt(1 - (v^2 / c^2)) special relativity
+    
+# g = GM/r^2
+    
+# g = (c^2/2r)(1-(t'/t)^2)
+    
+# M = (rc^2/2G)((t')^2 - 1)
+    
