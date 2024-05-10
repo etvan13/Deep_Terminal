@@ -20,9 +20,11 @@ pip --version
 ### Installation
 
 1. Install the necessary dependencies:
+```bash
 pip install -r requirements.txt
+```
 
-2. Navigate to the TerminalCode directory:
+3. Navigate to the TerminalCode directory:
 ```bash
 cd TerminalCode
 ```
