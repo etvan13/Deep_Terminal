@@ -16,4 +16,4 @@ This program is meant to be built upon by any who want. The idea is simply that 
     3. Add the new command to the list of commands in the terminal class, and add the function that runs your newly added demo.
         * To get a better reference on the complexity of the actual terminal, checkout the 'Deep_Terminal.py' file within the TerminalCode directory.
         * The idea is to build commands that function with spacetime coordinates that function across the universe.
-    4. I'm guessing you're part of deep, so if you come up with a cool command email me at: etvan13@tamu.edu (school) or etvan13@gmail.com (personal) your idea or code and I'll implement it into the actual terminal itself
+    4. If you come up with a cool command email me at: etvan13@tamu.edu (school) or etvan13@gmail.com (personal) your idea or code and I'll implement it into the actual terminal itself
