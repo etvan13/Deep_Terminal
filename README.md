@@ -13,19 +13,24 @@ This program is open for further development. Start by exploring `baseTerminal_c
 ### Prerequisites
 
 Ensure you have Python and pip installed on your machine. You can verify your installation with:
+```bash
 python --version
 pip --version
-
+```
 ### Installation
 
 1. Install the necessary dependencies:
 pip install -r requirements.txt
 
 2. Navigate to the TerminalCode directory:
+```bash
 cd TerminalCode
+```
 
-3. Run `main.py`:
+4. Run `main.py`:
+```bash
 python main.py
+```
 **Note:** This command launches the main terminal. If you're testing your code with the base terminal, skip step 2.
 
 ## How to Contribute
