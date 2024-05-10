@@ -143,14 +143,6 @@ ______ _____ ___________   _____                   _             _
             if user_input == 'exit':
                 break
         return "Exiting back to main terminal."
-    
-    def progression_command(self): # In the works...
-        stdin_fd = sys.stdin.fileno()
-        stdin_copy = os.dup(stdin_fd)
-        demo = OneDDemo(self.newpage(), stdin_fd, stdin_copy)
-        self.newpage()
-        demo.run()
-        return "Exiting back to main terminal."
 
 
 class Counter:
