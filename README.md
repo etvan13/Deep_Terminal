@@ -45,13 +45,12 @@ python main.py
 - For a deeper understanding of the terminal's complexity, see `Deep_Terminal.py` in the TerminalCode directory.
 - Aim to design commands that interact with spacetime coordinates across the universe.
 
-### Feedback and Contributions
+### Support
+
+For additional guidance, refer to the comments within the `baseTerminal_Class.py` file or reach out via the email addresses provided below.
+
+## Feedback and Contributions
 
 If you come up with an idea you'd like to incorporate into the terminal, let me know!
 - **School:** etvan13@tamu.edu
 - **Personal:** etvan13@gmail.com
-
-
-## Support
-
-For additional guidance, refer to the comments within the `baseTerminal_Class.py` file or reach out via the email addresses provided above.
