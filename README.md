@@ -45,11 +45,10 @@ python main.py
 
 ### Feedback and Contributions
 
-If you devise an interesting command, email me your ideas or code:
+If you come up with an idea you'd like to incorporate into the terminal, let me know!
 - **School:** etvan13@tamu.edu
 - **Personal:** etvan13@gmail.com
 
-I'm eager to incorporate your contributions into the terminal!
 
 ## Support
 
