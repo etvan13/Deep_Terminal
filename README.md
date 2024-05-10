@@ -1,4 +1,3 @@
-** About
 This program is a text-based terminal that relies on the functionality of a 'gear-like' coordinate system. (check the gear demo out to get a better idea)
 
 The coordinate system is built to function like a manual clock in which you, or the user, is able to progress it forwards or backwards and the system is built upon the span of the observable universe's radius!
