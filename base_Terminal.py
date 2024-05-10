@@ -8,6 +8,7 @@ class Terminal:
             "greetings": self.greet,
             "forwards": self.forwards,
             "backwards": self.backwards,
+            "skeleton" : self.skeletonCommand
             # Additional commands can be added here
         }
 
@@ -41,16 +42,12 @@ class Terminal:
             print(output)
             if command == "exit":
                 break
-    
-    # Filler for adding external commands
-    def add_external_command(self, command_name, command_function):
-        self.commands[command_name] = command_function
 
     ####COMMANDS####
     
     # Prints a list of available commands
     def show_help(self):
-        return "- help\n- greetings\n- forwards\n- backwards"
+        return "- help\n- greetings\n- forwards\n- backwards\n- skeleton" # Add new commands to the help list
     
     # Returns a greeting
     def greet(self):
@@ -65,6 +62,18 @@ class Terminal:
     def backwards(self):
         self.counter.decrement()
         return "Moved backwards."
+    
+    # **************** IMPORTANT *****************
+    # Runs the skeleton class
+    def skeletonCommand(self) :
+        skeletonObject = SkeleClass(self, self.counter) # The additional 'self.counter' just allows use with the coordinates
+        skeletonObject.run() # Runs the 'run()' command in the skeleton class
+        return "Back to main terminal." # Message for returning to the terminal (after the run function finishes, it means your command finished)
+    # ********************************************
+
+    # Concept for adding external commands
+    def add_external_command(self, command_name, command_function):
+        self.commands[command_name] = command_function
 
     ##################
     
@@ -114,7 +123,7 @@ class Counter:
             break  # Stop updating if no carry-over or borrow
     
     # Splits the counter string into a list of counters
-    @staticmethod
+    @staticmethod # Static allows any class to use without counter object
     def parse_coordinate(coord_str):
         if ' ' in coord_str:
             # Split the string by spaces and validate each part
@@ -202,42 +211,39 @@ class Counter:
         return self.counter.coord_conv(final_base10)
     
 
-#Template class for new commands
+    # **************** IMPORTANT *****************
+
+# Create the 'command' by making a class alongside a relevant name
+    # The main idea here is that you have a 'run' function in your class, which 
+    # initializes your class to do whatever you're intending to do, then it returns after,
+    # which goes back to the main terminal.
 class SkeleClass:
-    def __init__(self, terminal, external_commands=None):
-        self.terminal = terminal
-        self.commands = {
-            "help": self.show_help,
-            # Add more internal commands here
-            # ...
-        }
-        if external_commands:
-            self.commands.update(external_commands)
+    def __init__(self, terminal, counter):
+        # Initialize the skeleton class with basic setup.
+        self.counters = counter # Makes the counters usable from the main terminal
 
     def show_help(self):
-        help_message = "Available commands:\n"
-        for cmd in self.commands:
-            help_message += f"- {cmd}\n"
-        return help_message
-
-    def process_command(self, command):
-        if command in self.commands:
-            response = self.commands[command]()
-            if response is None:
-                response = ""
-        else:
-            response = "Unknown command."
-        return response
+        # Display available commands within the skeleton class. (optional)
+        print("Available commands:\n- help: Display this help message.")
+        return
 
     def run(self):
-        print(self.show_help())
-        while True:
-            command_input = input("> ")
-            command = command_input.lower()
+        Terminal.newpage() # Use this to clear the screen
 
-            if command == "exit":
-                print("Exiting.")
-                break
-            else:
-                output = self.process_command(command)
-                print(output)
+        self.skelFunction() # Runs the skeleton function (main functionality of command)
+
+        # This is how the terminal interacts with users. (inputting nothing or something other than 'help' skips the conditional)
+        userInput = input("Type help for more, or anything else to return to the terminal> ")
+
+        while (userInput == 'help'): # Loop until help isn't inputted
+            self.show_help()
+            userInput = input("Type help for more, or anything else to return to the terminal> ")
+
+        return # Ends the skeleton class and command returning to the main terminal
+
+    def skelFunction(self):
+        # This is a filler for adding functionality to the skeleton command
+        print("This is the skeleton command!")
+        print("Current coordinates:", self.counters.get_counters())  # Example usage of coordinates.
+        
+    # ****************END*******************
