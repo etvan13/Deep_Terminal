@@ -52,5 +52,7 @@ For additional guidance, refer to the comments within the `baseTerminal_Class.py
 ## Feedback and Contributions
 
 If you come up with an idea you'd like to incorporate into the terminal, let me know!
-- **School:** etvan13@tamu.edu
-- **Personal:** etvan13@gmail.com
+- **School email:** etvan13@tamu.edu
+- **Personal email:** etvan13@gmail.com
+- **School discord:** etvan
+- **Personal discord:** etvan13
