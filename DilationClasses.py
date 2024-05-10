@@ -1,46 +1,28 @@
 from decimal import Decimal, getcontext, InvalidOperation
 from timer_utils import*
 
-#-------Sub classes for Dilation--------#
 import pygame
 import sys
 import os
+
+
 #--------------------------Inevitable Progression---------------------------#
 
 class OneDDemo:
-    def __init__(self, newpage_func=None):
-        # Initialize Pygame
+    def __init__(self, newpage_func=None, stdin_fd=None, stdin_copy=None):
         pygame.init()
-
-        # Hide the cursor
         pygame.mouse.set_visible(False)
-
-        # Screen dimensions
         self.width, self.height = 800, 600
         self.screen = pygame.display.set_mode((self.width, self.height))
-
-        # Line start and end points based on a fixed length of 200 units
-        line_length = 300
-        self.start_pos = ((self.width - line_length) // 2, self.height // 2)
-        self.end_pos = (self.start_pos[0] + line_length, self.height // 2)
-
-        # Initial position of the point, starting at the beginning of the line
+        self.start_pos = ((self.width - 300) // 2, self.height // 2)
+        self.end_pos = (self.start_pos[0] + 300, self.height // 2)
         self.point_pos = [self.start_pos[0], self.start_pos[1]]
-
-        # Movement unit per key hold
         self.movement_unit = 1
-
-        # Key hold state
         self.left_key_down = False
         self.right_key_down = False
-
-        # Store the function to navigate to a new page
         self.newpage = newpage_func
 
     def run(self):
-        stdin_fd = sys.stdin.fileno()
-        stdin_copy = os.dup(stdin_fd)
-
         print("One D Demo - Use Left/Right arrow keys to move, 'q' to quit")
         running = True
         while running:
@@ -49,7 +31,7 @@ class OneDDemo:
                     running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_q:
-                        running = False  # Quit if 'q' is pressed
+                        running = False
                     elif event.key == pygame.K_LEFT:
                         self.left_key_down = True
                     elif event.key == pygame.K_RIGHT:
@@ -60,40 +42,28 @@ class OneDDemo:
                     elif event.key == pygame.K_RIGHT:
                         self.right_key_down = False
 
-            # Move the point if a key is held down
             if self.left_key_down:
                 self.point_pos[0] = max(self.start_pos[0], self.point_pos[0] - self.movement_unit)
             if self.right_key_down:
                 self.point_pos[0] = min(self.end_pos[0], self.point_pos[0] + self.movement_unit)
 
-            # Fill the screen with a black background
             self.screen.fill((0, 0, 0))
-
-            # Draw the line in white
             pygame.draw.line(self.screen, (255, 255, 255), self.start_pos, self.end_pos, 2)
-
-            # Draw the point in red
             pygame.draw.circle(self.screen, (255, 0, 0), (self.point_pos[0], self.point_pos[1]), 5)
-
-            # Update the display
             pygame.display.flip()
-
-            # Cap the frame rate
             pygame.time.Clock().tick(60)
 
-        # Quit Pygame
         pygame.quit()
-        
-        # Restore the original standard input
+
+        # Restore original standard input
         os.dup2(stdin_copy, stdin_fd)
         os.close(stdin_copy)
 
+        # Reset the terminal to a clean state
+        os.system("stty sane")
 
-   
 
 #--------------------------Spacetime Dilation---------------------------#
-    
-
 class TimeDilation:
     def __init__(self, newpage_func):
         self.newpage = newpage_func

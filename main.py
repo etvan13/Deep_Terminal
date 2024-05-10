@@ -2,14 +2,16 @@ from Deep_Terminal import Terminal
 from timer_utils import*
 import signal
 
-# Define a signal handler that does nothing
-def ignore_signal(signum, frame):
+
+# Define a signal handler for ignoring signals
+def ignore_signal(signum, frame): 
     return
 
 # Runs the Terminal through main
 def main():
     # Set the SIGINT handler to the ignore_signal function
-    signal.signal(signal.SIGINT, ignore_signal)
+    signal.signal(signal.SIGINT, ignore_signal) # Ignores Ctrl+C
+    # signal.signal(signal.SIGTSTP, ignore_signal)  # Ignores Ctrl+Z
     try:
         terminal = Terminal()
         start_watchdog_timer()

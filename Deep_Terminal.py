@@ -37,6 +37,7 @@ class Terminal:
             "forwards": self.forwards,
             "backwards": self.backwards,
             "input": self.input_command,
+            "freader" : self.fRead_Command,
             "read": self.read_command,
             "time dilation": self.dilation_command,
             "progression" : self.progression_command,
@@ -147,6 +148,11 @@ By: Ethan V., Nadia, E...'''
         input_obj = Input(self)
         message = input_obj.run()
         return message
+    
+    def fRead_Command(self):
+        reader = FileReader()
+        reader.run()
+        return "Exiting back to main terminal."
 
     def read_command(self):
         read_obj = Read(self)
@@ -164,8 +170,10 @@ By: Ethan V., Nadia, E...'''
                 break
         return "Exiting back to main terminal."
     
-    def progression_command(self):
-        demo = OneDDemo()
+    def progression_command(self): # In the works...
+        stdin_fd = sys.stdin.fileno()
+        stdin_copy = os.dup(stdin_fd)
+        demo = OneDDemo(self.newpage(), stdin_fd, stdin_copy)
         self.newpage()
         demo.run()
         return "Exiting back to main terminal."
@@ -175,6 +183,7 @@ class Counter:
     def __init__(self):
         self.counters = [0] * 6  # Initialize six counters
         self.universes = 0 # Initialize universes counter
+        self.load_counters()
 
     def copy(self):
         # Create a new instance of Counter
@@ -183,14 +192,32 @@ class Counter:
         new_counter.counters = self.counters[:]
         return new_counter
 
+    def save_counters(self):
+        # Save the counters and universes to a file
+        with open('counters.txt', 'w') as f:
+            for counter in self.counters:
+                f.write(f"{counter}\n")
+            f.write(f"{self.universes}\n")
+
+    def load_counters(self):
+        # Load the counters and universes from a file
+        if os.path.exists('counters.txt'):
+            with open('counters.txt', 'r') as f:
+                loaded_values = [int(line.strip()) for line in f.readlines()]
+                self.counters = loaded_values[:-1]  # All but the last item
+                self.universes = loaded_values[-1]  # The last item
+
     def increment(self):
         self._update_counters(1)
+        self.save_counters()
 
     def decrement(self):
         self._update_counters(-1)
+        self.save_counters()
     
     def spec_change(self, value):
         self._update_counters(value)
+        self.save_counters()
 
     def _update_counters(self, delta):
         # Start from the first counter and update
@@ -294,7 +321,7 @@ class GearDemo:
         self.displayed_message_ids = set()  # Set to keep track of displayed message titles
         self.new_messages_count = 0
 
-        self.inactivity_timeout = 10000  # 1 minute in milliseconds
+        self.inactivity_timeout = 60000  # 1 minute in milliseconds
 
         # Initialize gear_ratios with a copy to avoid modifying the original counter
         total_gear_value = self.terminal.counter.baseTenConv()
@@ -557,6 +584,17 @@ class Input:
         self.terminal = terminal
         self.setup_database()  # Ensure the database is set up
 
+    def info(self):
+        print_tabbed("This is the input command! Use it to input a text message into the system.")
+        print_tabbed("It works as follows:\n")
+
+        print_tabbed("You input a message pressing \'enter' for a new line")
+        print_tabbed("and type 'END' (all caps) on the last line to finish the message\n")
+
+        print_tabbed("You then are able to choose a title,")
+        print_tabbed("select a coordinate for it to be viewable at (if desired),")
+        print_tabbed("and choosing whether or not it's viewable on the list of readable messages!\n")
+
     @staticmethod
     def setup_database():
         conn = sqlite3.connect('deep_messages.db')
@@ -587,16 +625,7 @@ class Input:
 
     def input_message(self):
         # Intermediate explanation page
-        print_tabbed("This is the input command! Use it to input a text message into the system.")
-        print_tabbed("It works as follows:\n")
-
-        print_tabbed("You input a message pressing \'enter' for a new line")
-        print_tabbed("and type 'END' (all caps) on the last line to finish the message\n")
-
-        print_tabbed("You then are able to choose a title,")
-        print_tabbed("select a coordinate for it to be viewable at (if desired),")
-        print_tabbed("and choosing whether or not it's viewable on the list of readable messages!\n")
-
+        self.info()
         tabbed_input("Press \'enter\' to continue to message creation> ")
 
         print_tabbed("\nEnter the text to log (type 'END' on a new line to finish, 'EXIT' to cancel):")
@@ -663,6 +692,80 @@ class Input:
         reset_activity_timer()
         message = self.input_message()
         return message + "\nBack to main terminal."
+
+
+class FileReader:
+    def __init__(self, base_directory="text_files"):
+        self.base_directory = base_directory
+        self.current_directory = base_directory
+        self.active = True
+
+    def list_contents(self):
+        # Clear the screen for a cleaner display
+        os.system('cls' if os.name == 'nt' else 'clear')
+        
+        print("File Reader:")
+        print("Type a filename to read or a directory to move into it")
+        print("Typing back moves out of a directory.")
+        print("While in a file, press 'q' to exit at any moment")
+        print("Input 'exit' to return to the main terminal.\n")
+
+        if not os.path.exists(self.current_directory):
+            print("Directory does not exist.")
+            return
+        
+        items = glob.glob(os.path.join(self.current_directory, '*'))
+        for item in items:
+            print("   " + os.path.basename(item))  # Indentation for better readability
+
+    def change_directory(self, directory):
+        new_path = os.path.join(self.current_directory, directory)
+        if os.path.isdir(new_path):
+            self.current_directory = new_path
+        else:
+            print(f"'{directory}' is not a valid directory.")
+
+    def read_file(self, filename):
+        filepath = os.path.join(self.current_directory, filename)
+        if os.path.isfile(filepath):
+            subprocess.run(['less', filepath])
+        else:
+            print(f"File '{filename}' not found.")
+
+    def process_command(self, command_input):
+        Terminal.newpage()
+        if command_input == "exit":
+            self.active = False
+            return
+
+        # Navigate back to the parent directory (if not already at the base directory)
+        if command_input == "back" and self.current_directory != self.base_directory:
+            self.current_directory = os.path.dirname(self.current_directory)
+            return
+
+        # Check if the command is to navigate into a directory
+        if os.path.isdir(os.path.join(self.current_directory, command_input)):
+            self.change_directory(command_input)
+            return
+
+        # Check if the command is a filename
+        if os.path.isfile(os.path.join(self.current_directory, command_input)):
+            reset_activity_timer(300)
+            self.read_file(command_input)
+            return
+
+    def run(self):
+        self.list_contents()  # List contents at the start
+        while self.active:
+            reset_activity_timer()
+            # Display the current path relative to the base directory
+            relative_path = os.path.relpath(self.current_directory, self.base_directory)
+            print()
+            prompt = f"{relative_path if relative_path != '.' else ''}> "
+            command_input = input(prompt)
+            self.process_command(command_input)
+            if self.active:  # Only list contents again if still active
+                self.list_contents()
 
 
 class Read:
