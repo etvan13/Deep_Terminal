@@ -24,12 +24,12 @@ pip --version
 pip install -r requirements.txt
 ```
 
-3. Navigate to the TerminalCode directory:
+2. Navigate to the TerminalCode directory:
 ```bash
 cd TerminalCode
 ```
 
-4. Run `main.py`:
+3. Run `main.py`:
 ```bash
 python main.py
 ```
