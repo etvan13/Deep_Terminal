@@ -1,5 +1,24 @@
 import os
 
+# These functions are used for printing and inputting centered on the terminal's screen
+#   You'd just use 'print_tabbed()' or 'input_tabbed()' instead of 'print()' and 'input()'
+# **************************************************************************************************
+def print_tabbed(text, tab_width=25):
+    tab = ' ' * tab_width  # Create a string of spaces to represent the tab
+    lines = text.split('\n')  # Split the text into lines
+    for line in lines:
+        print(tab + line)
+
+def tabbed_input(prompt, tab_width=25):
+    tab = ' ' * tab_width  # Create a string of spaces to represent the tab
+    try:
+        return input(f"{tab}{prompt}")
+    except EOFError:
+        print("\nInput interrupted. Please try again or use the designated exit command.")
+        return ""  # Return an empty string
+# **************************************************************************************************
+
+# This is the main terminal, it holds all the functionality of the system containing all the commands.
 class Terminal:
     def __init__(self):
         self.counter = Counter()  # Initialize the counter object
