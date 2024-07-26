@@ -55,9 +55,7 @@ ______ _____ ___________   _____                   _             _
         return ascii_header + f"\n{self.counter.get_counters()}\n" + "Type 'help' for a list of commands, or more info.\n"
 
     def process_command(self, command):
-        if command == "deepterminalstop2024":
-            sys.exit(0)
-        elif command in self.commands:
+        if command in self.commands:
             response = self.commands[command]()
         else:
             response = "Unknown command."
