@@ -3,8 +3,8 @@
 1. **Permission to Use:**
    - Anyone is free to use, copy, distribute, and create derivative works from this work, including for commercial purposes.
 
-2. **Paradoxical Ownership by 'Kaus':**
-   - Ownership of the original work is paradoxically assigned to an entity named 'Kaus,' which exists perpetually in the future and is always out of reach of any present individual or entity.
+2. **Paradoxical Ownership 'Kaus':**
+   - Ownership of the original work is paradoxically assigned 'Kaus,' which exists perpetually in the future and is always out of reach of any present or entity.
 
 3. **Derivative Works:**
    - Derivative works can be created, but they must include this license, ensuring that the original basis remains unaltered and free from control or ownership claims. The derivative works can be used for any purpose.

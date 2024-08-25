@@ -21,7 +21,7 @@ pip --version
 
 1. Install the necessary dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt (Which is: cffi==1.16.0, pycparser==2.21, pygame==2.5.2)
 ```
 
 2. Navigate to the TerminalCode directory:
@@ -40,7 +40,7 @@ python main.py
 ### Adding New Commands
 
 1. Open the `baseTerminal_Class.py` file and familiarize yourself with its functionality.
-2. Create a new command using the 'skeleton class'.
+2. Create a new command utilizing the 'skeleton class'.
 3. Integrate your new command into the terminal class's command list and implement the function that runs your demo.
 - For a deeper understanding of the terminal's complexity, see `Deep_Terminal.py` in the TerminalCode directory.
 - Aim to design commands that interact with spacetime coordinates across the universe.
