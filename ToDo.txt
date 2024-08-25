@@ -1,0 +1,26 @@
+1. Implement formulas customizable to manipulate coordinates. 
+   * Maybe having a way to input a formula for #s g1 - g6 (gear 1 through gear 6)
+   * Possibly the option to choose to arrive at a coordinate (basically portaling)
+    - The idea here is to have a way for the user to change the current coordinate 
+    in some way other than just incrementing forwards and backwards!
+
+2. Fix the confirm choice for leaving a message 
+    * It's too easy to double click 'enter' on accident & lose what was typed
+    * In 'input' class, fix the fact that 'anything other than CONFIRM' is cancel, should just loop
+    
+
+
+(simplified version of what was lost): 
+
+"TERMINAL_HELP"
+    
+    The use of coordinates helps to establish
+    'moments' in spacetime. Any form of #s
+    aligned in some way is due to some change
+    in alignemnt (interactions). So, leaving
+    messages across these coordinates connects
+    a 'here' and 'then'. (sender & possible_reciever)
+
+
+The goal is to creatively and scientifically accurately create different connections
+between active coordinate sharers: The moment this is created and the moment you observe.
