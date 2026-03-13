@@ -1,0 +1,11 @@
+{
+    "0 1 0 0 0 0": {
+        "messages": [
+            {
+                "coordinate": "0 1 0 0 0 0",
+                "title": "First jump",
+                "message": "A portal! From 0 0 0 0 0 0"
+            }
+        ]
+    }
+}

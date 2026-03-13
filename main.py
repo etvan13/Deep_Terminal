@@ -1,9 +1,10 @@
-from base_Terminal import Terminal
+from Terminals.DeepTerminal import DeepTerminal
+
 
 def main():
-    # Instantiate and use your class
-    terminal = Terminal()
+    terminal = DeepTerminal()
     terminal.run()
+
 
 if __name__ == "__main__":
     main()

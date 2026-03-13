@@ -1,4 +1,6 @@
+
 import os
+from Commands.Example import*
 
 # These functions are used for printing and inputting centered on the terminal's screen
 #   You'd just use 'print_tabbed()' or 'input_tabbed()' instead of 'print()' and 'input()'
@@ -27,7 +29,8 @@ class Terminal:
             "greetings": self.greet,
             "forwards": self.forwards,
             "backwards": self.backwards,
-            "skeleton" : self.skeletonCommand
+            "skeleton" : self.skeletonCommand,
+            "example" : self.exampleCommand,
             # Additional commands can be added here
         }
 
@@ -82,6 +85,7 @@ class Terminal:
         self.counter.decrement()
         return "Moved backwards."
     
+    
     # **************** IMPORTANT *****************
     # Runs the skeleton class
     def skeletonCommand(self) :
@@ -93,6 +97,11 @@ class Terminal:
     # Concept for adding external commands
     def add_external_command(self, command_name, command_function):
         self.commands[command_name] = command_function
+
+    def exampleCommand(self, terminal):
+        exampleObject = ExampleCommand()
+        exampleObject.run()
+        return "Back to main terminal."
 
     ##################
     
@@ -231,6 +240,58 @@ class Counter:
     
 
     # **************** IMPORTANT *****************
+
+### EXAMPLE COMMANDS ###
+
+class ExampleSimpleCommand:
+    """
+    This is a simple command example.
+    """
+
+    def __init__(self):
+        pass  # Initialize any required variables here
+
+    def run(self):
+        print("This is an example of a simple command.")
+
+
+class ExampleCommandWithSubcommands:
+    """
+    This is an example of a command with sub-commands.
+    """
+
+    def __init__(self):
+        self.commands = {
+            "help": self.show_help,
+            "subcommand1": self.subcommand1,
+            "subcommand2": self.subcommand2,
+            # Add more sub-commands here
+        }
+
+    def show_help(self):
+        help_message = "Available sub-commands:\n"
+        for cmd in self.commands:
+            help_message += f"- {cmd}\n"
+        print(help_message.strip())
+
+    def subcommand1(self):
+        print("Executed subcommand1.")
+
+    def subcommand2(self):
+        print("Executed subcommand2.")
+
+    def run(self):
+        print("Entering example command with sub-commands. Type 'help' for options.")
+        while True:
+            command_input = input("ExampleCommand> ").lower()
+            if command_input == "exit":
+                print("Exiting example command.")
+                break
+            elif command_input in self.commands:
+                self.commands[command_input]()
+            else:
+                print("Unknown sub-command. Type 'help' for options.")
+
 
 # Create the 'command' by making a class alongside a relevant name
     # The main idea here is that you have a 'run' function in your class, which 
