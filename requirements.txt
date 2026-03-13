@@ -1,0 +1,38 @@
+# ================================
+# Required for the public build
+# ================================
+
+pygame==2.6.1
+
+
+# ================================
+# Optional / full DEEP terminal dependencies
+# (not required for the public repo)
+# ================================
+
+# Used for planetary calculations
+skyfield==1.49
+jplephem==2.22
+sgp4==2.23
+
+# Encryption utilities
+pycryptodome==3.21.0
+
+# Advanced terminal UI (not used in stripped version)
+prompt_toolkit==3.0.50
+wcwidth==0.2.13
+
+# Environment configuration
+python-dotenv==1.0.1
+
+# Timezone utilities
+pytz==2024.2
+
+# Media playback tools
+ffmpeg==1.4
+
+# SSL certificates
+certifi==2024.12.14
+
+# Numerical tools (used in some demos)
+numpy==2.2.2
