@@ -31,7 +31,7 @@ class DeepTerminal:
         self.counter = Counter()
 
         # Commands that work in this public build
-        self.available_commands = {
+        self.commands = {
             "help": self.show_help,
             "info": self.info_command,
             "greetings": self.greet,
@@ -56,12 +56,6 @@ class DeepTerminal:
             "deep videos": self.placeholder_command,
             "suggestions": self.placeholder_command,
             "sleep": self.placeholder_command,
-        }
-
-        # Combined lookup used by the terminal when resolving commands
-        self.commands = {
-            **self.available_commands,
-            **self.unavailable_commands,
         }
 
         self.setup_readline()
@@ -151,6 +145,12 @@ class DeepTerminal:
                 self.counter.increment()
 
             return self.default_message() + "\n" + response + "\n"
+        
+        elif command in self.unavailable_commands:
+            return (
+                self.default_message() + f"\nThis command exists in the full DEEP terminal but is not "
+                "\nincluded in the portable public build.\n"
+            )
 
         corrected_cmd = self.fuzzy_check(command, self.commands.keys(), cutoff=0.6)
         if corrected_cmd:
@@ -205,7 +205,7 @@ class DeepTerminal:
         left_title = "Available commands:"
         right_title = "Unavailable in portable build:"
 
-        left_list = list(self.available_commands.keys())
+        left_list = list(self.commands.keys())
         right_list = list(self.unavailable_commands.keys())
 
         left_lines = [left_title] + [f"- {cmd}" for cmd in left_list]
