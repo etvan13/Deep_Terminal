@@ -9,6 +9,7 @@ from utils.timer_utils import*
 
 from Commands.TrajectoryDemo import*
 from Commands.Paper_Command.Paper import PaperCommand
+from Commands.bhMap import*
 
 
 class DeepTerminal:
@@ -40,6 +41,7 @@ class DeepTerminal:
             "credits": self.credits_command,
             "research papers": self.paper_command,
             "2d trajectory": self.trajectory_command,
+            "black hole mapping": self.black_hole_map_command,
             "exit": self.exit_command,
         }
 
@@ -262,6 +264,12 @@ class DeepTerminal:
         self.newpage()
         msg = trajectory_obj.run()
         return msg + "\nExiting back to main terminal."
+    
+    def black_hole_map_command(self):
+        black_hole_map_obj = BlackHoleMapping()
+        self.newpage()
+        black_hole_map_obj.run()
+        return "Exiting back to main terminal."
 
     def credits_command(self):
         """Show DEEP project credits."""
