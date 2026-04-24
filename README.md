@@ -13,7 +13,7 @@ The goal of this repository is to provide a **portable version of the terminal**
 Clone the repository:
 
 ```bash
-git clone https://github.com/etvan13/Deep_Terminal
+git clone https://github.com/etvan13/deep-terminal.git
 cd deep-terminal
 ```
 
