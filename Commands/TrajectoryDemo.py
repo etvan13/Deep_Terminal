@@ -6,6 +6,7 @@ import os
 import json
 import logging
 
+from pathlib import Path
 from utils.timer_utils import reset_activity_timer
 from config import get_leaderboard_path
 
@@ -102,27 +103,58 @@ class Trajectory:
     # ------------------------------
     # Leaderboard Methods
     # ------------------------------
+    def get_leaderboard_file(self):
+        path = Path(get_leaderboard_path())
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
+
+
     def load_leaderboard(self):
-        if not os.path.exists(LEADERBOARD_FILE):
+        path = self.get_leaderboard_file()
+
+        if not path.exists():
             return []
+
         try:
-            with open(LEADERBOARD_FILE, 'r') as f:
+            with open(path, "r") as f:
                 data = json.load(f)
                 if isinstance(data, list):
                     return data
         except json.JSONDecodeError:
-            pass
+            return []
+        except PermissionError:
+            self.exit_message = f"Permission denied reading leaderboard: {path}"
+            return []
+        except Exception as e:
+            self.exit_message = f"Could not read leaderboard: {e}"
+            return []
+
         return []
 
+
     def save_leaderboard(self):
-        with open(LEADERBOARD_FILE, 'w') as f:
-            json.dump(self.leaderboard_data, f, indent=4)
+        path = self.get_leaderboard_file()
+
+        try:
+            with open(path, "w") as f:
+                json.dump(self.leaderboard_data, f, indent=4)
+            return True
+
+        except PermissionError:
+            self.exit_message = f"Permission denied saving leaderboard: {path}"
+            return False
+
+        except Exception as e:
+            self.exit_message = f"Could not save leaderboard: {e}"
+            return False
+
 
     def add_score_to_leaderboard(self, name, level):
         self.leaderboard_data.append({"name": name, "level": level})
-        self.leaderboard_data.sort(key=lambda x: x['level'], reverse=True)
+        self.leaderboard_data.sort(key=lambda x: x["level"], reverse=True)
         self.leaderboard_data = self.leaderboard_data[:5]
-        self.save_leaderboard()
+
+        return self.save_leaderboard()
 
     # ------------------------------
     # Game Logic
@@ -327,7 +359,7 @@ class Trajectory:
                         self.running = False
                         break
                     elif event.type == pygame.KEYDOWN:
-                        reset_activity_timer()
+                        reset_activity_timer(120)
                         if event.key == pygame.K_ESCAPE:
                             self.user_quit = True
                             self.running = False
@@ -344,9 +376,9 @@ class Trajectory:
                                     self.running = False
                                     break
                         elif event.key == pygame.K_RIGHT:
-                            self.angle = max(0, self.angle - 1)  # Right arrow decreases angle
+                            self.angle = max(0, self.angle - 1)
                         elif event.key == pygame.K_LEFT:
-                            self.angle = min(90, self.angle + 1) # Left arrow increases angle
+                            self.angle = min(90, self.angle + 1)
                         elif event.key == pygame.K_UP:
                             self.power = min(100, self.power + 1)
                         elif event.key == pygame.K_DOWN:
@@ -382,8 +414,6 @@ class Trajectory:
                 pygame.display.flip()
                 self.clock.tick(self.FPS)
 
-            # If the loop ended *without* attempts dropping to zero and the user did *not* quit,
-            # we ask for their name. Otherwise, skip.
             if self.attempts > 0 and not self.user_quit:
                 self.end_game_prompt()
 
@@ -548,38 +578,60 @@ class Trajectory:
                  (tip_x + tip_size, tip_y + tip_size/2)])
 
     def draw_leaderboard(self):
-        """
-        Draws "Leaderboard (Top 5)" and centers each subsequent entry
-        under that header.
-        """
-        # Draw header near top-right
+        HEADER_COLOR = (80, 160, 255)
+
+        NAME_COLOR = (255, 170, 60)   # blue
+        LEVEL_COLOR = (100, 180, 255)   # orange
+        MID_COLOR = self.WHITE         # "Lvl"
+
         header_text = "Leaderboard (Top 5)"
-        header_surf = self.FONT.render(header_text, True, self.WHITE)
+        header_surf = self.FONT.render(header_text, True, HEADER_COLOR)
         header_rect = header_surf.get_rect(topright=(self.WIDTH - 20, 20))
         self.screen.blit(header_surf, header_rect)
 
-        # We'll center the names under the header by using header_rect.centerx
         center_x = header_rect.centerx
-        y_pos = header_rect.bottom + 20  # Some spacing after the header
+        y_pos = header_rect.bottom + 20
 
         for entry in self.leaderboard_data:
-            text_str = f"{entry['name']} - Lvl {entry['level']}"
-            row_text = self.SMALL_FONT.render(text_str, True, self.WHITE)
-            row_rect = row_text.get_rect()
-            row_rect.centerx = center_x
-            row_rect.top = y_pos
-            self.screen.blit(row_text, row_rect)
-            y_pos += row_rect.height + 5
+            name = entry["name"]
+            level = entry["level"]
+
+            # Render pieces separately
+            name_surf = self.SMALL_FONT.render(name, True, NAME_COLOR)
+            lvl_label_surf = self.SMALL_FONT.render(" - Lvl ", True, MID_COLOR)
+            level_surf = self.SMALL_FONT.render(str(level), True, LEVEL_COLOR)
+
+            # Combine widths to center properly
+            total_width = (
+                name_surf.get_width()
+                + lvl_label_surf.get_width()
+                + level_surf.get_width()
+            )
+
+            start_x = center_x - total_width // 2
+
+            # Blit in sequence
+            self.screen.blit(name_surf, (start_x, y_pos))
+            start_x += name_surf.get_width()
+
+            self.screen.blit(lvl_label_surf, (start_x, y_pos))
+            start_x += lvl_label_surf.get_width()
+
+            self.screen.blit(level_surf, (start_x, y_pos))
+
+            y_pos += name_surf.get_height() + 5
 
     def end_game_prompt(self):
-        """
-        Ends the game, prompting for a name if user wants to save.
-        """
         self.show_popup_message(f"You reached Level {self.level}!", color=self.YELLOW, duration=500)
         name = self.prompt_for_name()
+
         if name:
-            self.add_score_to_leaderboard(name, self.level)
-            self.exit_message = "Successfully Logged Score"
+            saved = self.add_score_to_leaderboard(name, self.level)
+            if saved:
+                self.exit_message = "Successfully Logged Score"
+            else:
+                # save_leaderboard already set a more specific message
+                pass
         else:
             self.exit_message = "Leaving Trajectory Demo"
 
