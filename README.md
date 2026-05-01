@@ -17,6 +17,29 @@ git clone https://github.com/etvan13/Deep_Terminal
 cd deep-terminal
 ```
 
+Create a virtual environment:
+
+```bash
+python -m venv venv
+```
+
+Activate the virtual environment:
+
+**On macOS/Linux:**
+```bash
+source venv/bin/activate
+```
+
+**On Windows (Command Prompt):**
+```bash
+venv\Scripts\activate
+```
+
+**On Windows (PowerShell):**
+```bash
+venv\Scripts\Activate.ps1
+```
+
 Install dependencies:
 
 ```bash
